@@ -1,4 +1,4 @@
-# 📖 KJV Bible & Lyrics Slide Generator
+# 📖 CBT KJV Bible & Lyrics Generator
 
 A modern, high-performance web application designed to generate professional KJV Bible and Song Lyric presentation slides. Built for speed, offline reliability, and beautiful aesthetics.
 

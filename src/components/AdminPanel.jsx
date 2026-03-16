@@ -1,6 +1,6 @@
 /**
  * AdminPanel.jsx
- * Sidebar control panel for the KJV Bible Slide Generator.
+ * Sidebar control panel for the CBT KJV Bible & Lyrics Generator.
  * Manages verse fetching, appearance settings, and export.
  */
 
@@ -152,8 +152,8 @@ export default function AdminPanel({
     <aside className="w-80 min-w-[280px] flex-shrink-0 bg-slate-900 border-r border-slate-700/50 flex flex-col h-screen overflow-y-auto shadow-2xl">
       <div className="px-5 py-5 border-b border-slate-700/60 bg-gradient-to-r from-indigo-900/40 to-slate-900">
         <div className="flex items-center gap-2.5 mb-0.5">
-          <h1 className="text-lg font-bold text-white tracking-tight">
-            KJV Bible Slide Generator
+          <h1 className="text-lg font-bold text-white tracking-tight leading-tight">
+            CBT KJV Bible &<br/>Lyrics Generator
           </h1>
         </div>
         <p className="text-xs text-slate-400">PowerPoint Export</p>
