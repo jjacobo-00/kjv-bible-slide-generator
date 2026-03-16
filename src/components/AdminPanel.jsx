@@ -482,6 +482,15 @@ export default function AdminPanel({
           </p>
         )}
       </div>
+
+      {/* ── Footer ── */}
+      <div className="px-5 py-3 text-center border-t border-slate-800/40">
+        <p className="text-[10px] text-slate-500 font-medium">
+          © {new Date().getFullYear()} All rights reserved.
+          <br />
+          Christian Baptist Tabernacle
+        </p>
+      </div>
     </aside>
   );
 }
