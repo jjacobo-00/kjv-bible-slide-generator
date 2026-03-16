@@ -1,0 +1,487 @@
+/**
+ * AdminPanel.jsx
+ * Sidebar control panel for the KJV Bible Slide Generator.
+ * Manages verse fetching, appearance settings, and export.
+ */
+
+import { useState, useEffect } from 'react';
+import { generateAndDownloadPptx } from '../utils/pptxGenerator.js';
+import { getAutocompleteSuggestions } from '../utils/bibleApi.js';
+
+// ── Font Options ──────────────────────────────────────────────────────────────
+const FONT_OPTIONS = [
+  { label: 'Playfair Display', value: 'Playfair Display' },
+  { label: 'Lora', value: 'Lora' },
+  { label: 'EB Garamond', value: 'EB Garamond' },
+  { label: 'Cinzel', value: 'Cinzel' },
+  { label: 'Merriweather', value: 'Merriweather' },
+  { label: 'Source Serif 4', value: 'Source Serif 4' },
+  { label: 'Times New Roman', value: 'Times New Roman' },
+  { label: 'Georgia', value: 'Georgia' },
+  { label: 'Roboto', value: 'Roboto' },
+  { label: 'Inter', value: 'Inter' },
+  { label: 'Arial', value: 'Arial' },
+  { label: 'Verdana', value: 'Verdana' },
+];
+
+// ── Preset Color Swatches ────────────────────────────────────────────────────
+const BG_PRESETS = [
+  '#1a1a2e', '#0f3460', '#16213e', '#1b4332', '#370617',
+  '#2d2d2d', '#000000', '#FFFFFF', '#212529', '#3d5a80',
+];
+
+const FONT_PRESETS = [
+  '#FFFFFF', '#F8F1E0', '#FFD700', '#A8EDEA', '#FFC3A0',
+  '#E0E0E0', '#FDFFB6', '#C8E6C9', '#000000', '#2d2d2d',
+];
+
+// ── Reusable subcomponents ────────────────────────────────────────────────────
+
+function SectionLabel({ children }) {
+  return (
+    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
+      {children}
+    </p>
+  );
+}
+
+function ColorSwatches({ colors, selected, onSelect }) {
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-1">
+      {colors.map((c) => (
+        <button
+          key={c}
+          title={c}
+          onClick={() => onSelect(c)}
+          style={{ backgroundColor: c }}
+          className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 focus:outline-none ${
+            selected === c
+              ? 'border-indigo-400 scale-110'
+              : 'border-slate-600 hover:border-slate-400'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
+/**
+ * @param {Object} props
+ * @param {Array}    props.slides
+ * @param {string|number} props.activeSlideId
+ * @param {Object}   props.activeSlide
+ * @param {Function} props.onSetActiveSlide
+ * @param {Function} props.onAddSlide
+ * @param {Function} props.onRemoveSlide
+ * @param {Function} props.onSettingsChange
+ * @param {Function} props.onVerseQueryChange
+ * @param {Function} props.onFetchVerse
+ * @param {Object}   props.fontScale
+ */
+export default function AdminPanel({
+  settings,
+  slides,
+  activeSlideId,
+  activeSlide,
+  onSetActiveSlide,
+  onAddSlide,
+  onRemoveSlide,
+  onSettingsChange,
+  onVerseQueryChange,
+  onFetchVerse,
+  fontScale,
+}) {
+  const verseState = activeSlide.verseState;
+  const verseQuery = activeSlide.verseQuery;
+
+  const [isExporting, setIsExporting] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+
+  const fetchSuggestions = async (q) => {
+    if (!q.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const results = await getAutocompleteSuggestions(q);
+    setSuggestions(results);
+  };
+
+  // Keep suggestions updated if activeSlide changes query externally
+  useEffect(() => {
+    if (activeSlideId && !showSuggestions) {
+      fetchSuggestions(verseQuery);
+    }
+  }, [verseQuery, activeSlideId]);
+
+  // Generic updater helper
+  const update = (key) => (e) => onSettingsChange(key, e.target.value);
+
+  // Handle verse fetch on Enter or button click
+  const handleFetch = () => onFetchVerse(verseQuery);
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleFetch();
+  };
+
+  const hasAnyVerse = slides.some(s => s.verseState.verseText);
+
+  // Export handler
+  const handleExport = async () => {
+    if (!hasAnyVerse) return;
+    setIsExporting(true);
+    try {
+      await generateAndDownloadPptx(slides, settings);
+    } catch (err) {
+      console.error('PPTX generation failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return (
+    <aside className="w-80 min-w-[280px] flex-shrink-0 bg-slate-900 border-r border-slate-700/50 flex flex-col h-screen overflow-y-auto shadow-2xl">
+      <div className="px-5 py-5 border-b border-slate-700/60 bg-gradient-to-r from-indigo-900/40 to-slate-900">
+        <div className="flex items-center gap-2.5 mb-0.5">
+          <h1 className="text-lg font-bold text-white tracking-tight">
+            KJV Bible Slide Generator
+          </h1>
+        </div>
+        <p className="text-xs text-slate-400">PowerPoint Export</p>
+      </div>
+
+      <div className="flex flex-col gap-5 px-5 py-5 flex-1">
+
+        {/* ── Slides Manager ── */}
+        <section>
+          <div className="flex items-center justify-between mb-2">
+            <SectionLabel>Slides</SectionLabel>
+            <button
+               onClick={onAddSlide}
+               className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+               title="Add new slide"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+              Add
+            </button>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+            {slides.map((s, index) => (
+              <div 
+                key={s.id} 
+                className={`flex items-center h-8 rounded border shrink-0 transition-colors overflow-hidden ${
+                  activeSlideId === s.id
+                    ? 'border-indigo-500 bg-indigo-900/40 text-white'
+                    : 'border-slate-600 bg-slate-800 text-slate-400 hover:border-slate-500'
+                }`}
+              >
+                <button
+                  onClick={() => onSetActiveSlide(s.id)}
+                  className={`flex items-center justify-center h-full text-xs font-semibold px-4 hover:text-white transition-colors outline-none`}
+                >
+                  {index + 1}
+                </button>
+                {slides.length > 1 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onRemoveSlide(s.id); }}
+                    className="flex items-center justify-center h-full px-2 bg-black/20 hover:bg-red-500/20 hover:text-red-400 text-slate-500 transition-colors outline-none"
+                    title="Delete slide"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="border-t border-slate-700/50" />
+
+        {/* ── Verse Lookup ── */}
+        <section className="relative">
+          <SectionLabel>Scripture Reference</SectionLabel>
+          <div className="flex gap-2 relative">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={verseQuery}
+                onChange={(e) => {
+                  onVerseQueryChange(e.target.value);
+                  fetchSuggestions(e.target.value);
+                  setShowSuggestions(true);
+                  setSuggestionIndex(-1);
+                }}
+                onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setSuggestionIndex(i => Math.min(i + 1, suggestions.length - 1));
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setSuggestionIndex(i => Math.max(i - 1, -1));
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+                      onVerseQueryChange(suggestions[suggestionIndex]);
+                      setShowSuggestions(false);
+                      // Don't auto-fetch if we're just completing a book or chapter (ends with space or colon)
+                      if (!suggestions[suggestionIndex].endsWith(' ') && !suggestions[suggestionIndex].endsWith(':')) {
+                        setTimeout(() => handleFetch(), 50);
+                      } else {
+                        // Let them keep typing
+                        const newQ = suggestions[suggestionIndex];
+                        fetchSuggestions(newQ);
+                      }
+                    } else {
+                      handleFetch();
+                      setShowSuggestions(false);
+                    }
+                  } else if (e.key === 'Escape') {
+                    setShowSuggestions(false);
+                  }
+                }}
+                placeholder="e.g. John 3:16"
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
+                autoComplete="off"
+              />
+              
+              {/* Autocomplete Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <ul className="absolute z-50 left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+                  {suggestions.map((sug, i) => (
+                    <li
+                      key={sug}
+                      onClick={() => {
+                        onVerseQueryChange(sug);
+                        setShowSuggestions(false);
+                        if (!sug.endsWith(' ') && !sug.endsWith(':')) {
+                          setTimeout(() => onFetchVerse(sug), 50);
+                        } else {
+                           fetchSuggestions(sug);
+                           setTimeout(() => setShowSuggestions(true), 10);
+                        }
+                      }}
+                      onMouseEnter={() => setSuggestionIndex(i)}
+                      className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
+                        i === suggestionIndex ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      {sug}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            
+            <button
+              onClick={() => { setShowSuggestions(false); handleFetch(); }}
+              disabled={verseState.loading}
+              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap"
+            >
+              {verseState.loading ? (
+                <>
+                  <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <span>Loading</span>
+                </>
+              ) : (
+                'Fetch'
+              )}
+            </button>
+          </div>
+
+          {/* Error state */}
+          {verseState.error && (
+            <div className="mt-2 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded-lg text-xs text-red-300">
+              ⚠ {verseState.error}
+            </div>
+          )}
+
+          {/* Overflow warning */}
+          {fontScale?.overflow && verseState.verseText && (
+            <div className="mt-2 px-3 py-2 bg-amber-900/40 border border-amber-700/50 rounded-lg text-xs text-amber-300">
+              ⚠ This verse is very long ({verseState.verseText.length + (verseState.verseRef?.length ?? 0)} chars). Text may overflow the slide. Consider splitting into multiple slides.
+            </div>
+          )}
+
+          {/* Font size indicator */}
+          {fontScale && verseState.verseText && (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-xs text-slate-500">Auto font size:</span>
+              <span className="text-xs font-medium text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded-full">
+                {fontScale.sizeLabel}
+              </span>
+            </div>
+          )}
+        </section>
+
+        <div className="border-t border-slate-700/50" />
+
+        {/* ── Background ── */}
+        <section>
+          <SectionLabel>Background</SectionLabel>
+
+          {/* BG Color picker */}
+          <div className="flex items-center gap-2.5 mb-2">
+            <label className="text-xs text-slate-400 w-16 shrink-0">Color</label>
+            <input
+              type="color"
+              value={settings.bgColor}
+              onChange={update('bgColor')}
+              className="w-8 h-8 rounded cursor-pointer bg-transparent border border-slate-600 p-0.5"
+            />
+            <span className="text-xs text-slate-500 font-mono">{settings.bgColor}</span>
+          </div>
+          <ColorSwatches
+            colors={BG_PRESETS}
+            selected={settings.bgColor}
+            onSelect={(c) => onSettingsChange('bgColor', c)}
+          />
+
+          {/* BG Image URL */}
+          <div className="mt-3">
+            <label className="text-xs text-slate-400 block mb-1">Image URL <span className="text-slate-600">(optional, overrides color)</span></label>
+            <input
+              type="url"
+              value={settings.bgImageUrl}
+              onChange={update('bgImageUrl')}
+              placeholder="https://example.com/bg.jpg"
+              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
+            />
+          </div>
+        </section>
+
+        <div className="border-t border-slate-700/50" />
+
+        {/* ── Font ── */}
+        <section>
+          <SectionLabel>Typography</SectionLabel>
+
+          {/* Font Family */}
+          <div className="mb-3">
+            <label className="text-xs text-slate-400 block mb-1">Font Family</label>
+            <select
+              value={settings.fontFamily}
+              onChange={update('fontFamily')}
+              style={{ fontFamily: settings.fontFamily }}
+              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors cursor-pointer"
+            >
+              {FONT_OPTIONS.map((f) => (
+                <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Font Color */}
+          <div className="flex items-center gap-2.5 mb-2">
+            <label className="text-xs text-slate-400 w-16 shrink-0">Color</label>
+            <input
+              type="color"
+              value={settings.fontColor}
+              onChange={update('fontColor')}
+              className="w-8 h-8 rounded cursor-pointer bg-transparent border border-slate-600 p-0.5"
+            />
+            <span className="text-xs text-slate-500 font-mono">{settings.fontColor}</span>
+          </div>
+          <ColorSwatches
+            colors={FONT_PRESETS}
+            selected={settings.fontColor}
+            onSelect={(c) => onSettingsChange('fontColor', c)}
+          />
+        </section>
+
+        <div className="border-t border-slate-700/50" />
+
+        {/* ── Layout ── */}
+        <section>
+          <SectionLabel>Slide Layout</SectionLabel>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { value: 'center', label: 'Centered', icon: '⬛' },
+              { value: 'top', label: 'Top Aligned', icon: '⬛' },
+            ].map(({ value, label, icon }) => (
+              <button
+                key={value}
+                onClick={() => onSettingsChange('layout', value)}
+                className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg border text-xs font-medium transition-all ${
+                  settings.layout === value
+                    ? 'border-indigo-500 bg-indigo-900/40 text-indigo-300'
+                    : 'border-slate-600 bg-slate-800/50 text-slate-400 hover:border-slate-500 hover:text-slate-300'
+                }`}
+              >
+                {/* Mini slide viz */}
+                <div className="w-full aspect-video bg-slate-700 rounded-sm flex flex-col p-1 gap-0.5">
+                  {value === 'center' ? (
+                    <>
+                      <div className="flex-1" />
+                      <div className="h-px bg-slate-400 mx-1" />
+                      <div className="h-px bg-slate-400 mx-2" />
+                      <div className="h-px bg-slate-400 mx-3" />
+                      <div className="flex-1" />
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-px bg-slate-400 mx-1" />
+                      <div className="h-px bg-slate-400 mx-2" />
+                      <div className="h-px bg-slate-400 mx-3" />
+                      <div className="flex-1" />
+                    </>
+                  )}
+                </div>
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* ── Export Button ── */}
+      <div className="px-5 py-4 border-t border-slate-700/60 bg-slate-900/80">
+        <button
+          onClick={handleExport}
+          disabled={!hasAnyVerse || isExporting}
+          className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${
+            hasAnyVerse && !isExporting
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white cursor-pointer hover:shadow-indigo-500/30 hover:shadow-xl active:scale-95'
+              : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+          }`}
+        >
+          {isExporting ? (
+            <>
+              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Generating PPTX…
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Download PPTX
+            </>
+          )}
+        </button>
+        {!hasAnyVerse && (
+          <p className="text-center text-xs text-slate-600 mt-2">
+            Fetch a verse to enable export
+          </p>
+        )}
+      </div>
+    </aside>
+  );
+}
