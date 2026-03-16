@@ -9,6 +9,7 @@ import AdminPanel from './components/AdminPanel.jsx';
 import SlidePreview from './components/SlidePreview.jsx';
 import { fetchBibleVerse } from './utils/bibleApi.js';
 import { getScaledFont } from './utils/fontScaler.js';
+import { parseLyrics } from './utils/lyricsParser.js';
 
 // ── Default Settings ──────────────────────────────────────────────────────────
 const DEFAULT_SETTINGS = {
@@ -17,6 +18,7 @@ const DEFAULT_SETTINGS = {
   fontFamily: 'Playfair Display',
   fontColor: '#F8F1E0',
   layout: 'center', // 'center' | 'top'
+  lyricsLinesPerSlide: 2,
 };
 
 const createNewSlide = (id) => ({
@@ -27,8 +29,10 @@ const createNewSlide = (id) => ({
 
 export default function App() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [appMode, setAppMode] = useState('bible'); // 'bible' | 'lyrics'
   const [slides, setSlides] = useState([createNewSlide(Date.now())]);
   const [activeSlideId, setActiveSlideId] = useState(slides[0].id);
+  const [lyricsRawText, setLyricsRawText] = useState('');
 
   const activeSlide = slides.find((s) => s.id === activeSlideId) || slides[0];
 
@@ -91,15 +95,22 @@ export default function App() {
 
   // Compute font scale info reactively whenever the active slide's verse changes
   const fontScale = useMemo(() => {
+    if (appMode === 'lyrics') return null; // Lyrics handled differently
     if (!activeSlide.verseState.verseText) return null;
     const fullText = `${activeSlide.verseState.verseText}\n\n— ${activeSlide.verseState.verseRef ?? ''}`;
     return getScaledFont(fullText);
-  }, [activeSlide.verseState.verseText, activeSlide.verseState.verseRef]);
+  }, [activeSlide.verseState.verseText, activeSlide.verseState.verseRef, appMode]);
+
+  const parsedLyrics = useMemo(() => {
+    return parseLyrics(lyricsRawText, settings.lyricsLinesPerSlide);
+  }, [lyricsRawText, settings.lyricsLinesPerSlide]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0a0c14]">
       <AdminPanel
         settings={settings}
+        appMode={appMode}
+        onSetAppMode={setAppMode}
         slides={slides}
         activeSlideId={activeSlideId}
         activeSlide={activeSlide}
@@ -110,12 +121,17 @@ export default function App() {
         onVerseQueryChange={handleVerseQueryChange}
         onFetchVerse={handleFetchVerse}
         fontScale={fontScale}
+        lyricsRawText={lyricsRawText}
+        onLyricsChange={setLyricsRawText}
+        lyricsSlides={parsedLyrics}
       />
       <SlidePreview
         settings={settings}
+        appMode={appMode}
         verseText={activeSlide.verseState.verseText}
         verseRef={activeSlide.verseState.verseRef}
         fontScale={fontScale}
+        lyricsSlides={parsedLyrics}
       />
     </div>
   );

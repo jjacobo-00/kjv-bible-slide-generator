@@ -5,16 +5,20 @@
  */
 
 import { useMemo, useRef, useEffect } from 'react';
-import { getScaledFont, ptToCssPreviewPx } from '../utils/fontScaler.js';
+import { ptToCssPreviewPx } from '../utils/fontScaler.js';
+import { getLyricsFontSize } from '../utils/lyricsParser.js';
+
 
 /**
  * @param {Object} props
  * @param {Object}   props.settings   - Slide appearance settings
+ * @param {string}   props.appMode    - 'bible' | 'lyrics'
  * @param {string}   props.verseText  - The verse body text
  * @param {string}   props.verseRef   - The verse reference string
  * @param {Object}   props.fontScale  - { fontSize, overflow, sizeLabel }
+ * @param {string[]} props.lyricsSlides - Array of lyric lines
  */
-export default function SlidePreview({ settings, verseText, verseRef, fontScale }) {
+export default function SlidePreview({ settings, appMode, verseText, verseRef, fontScale, lyricsSlides = [] }) {
   const containerRef = useRef(null);
 
   // We'll track the container width to calculate responsive font sizes
@@ -51,21 +55,17 @@ export default function SlidePreview({ settings, verseText, verseRef, fontScale 
   }, [settings.bgColor, settings.bgImageUrl]);
 
   const hasVerse = verseText && verseText.trim().length > 0;
+  const hasLyrics = lyricsSlides.length > 0;
 
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-[#0a0c14] p-8 overflow-auto min-h-0">
-      {/* Label */}
-      <div className="flex items-center gap-2 mb-4 self-start">
-        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-        <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">
-          Live Preview · 16:9
-        </span>
-      </div>
+  // Components for the individual slide core logic (reused for lyrics feeds)
+  const SlideCard = ({ text, refText, isLyric = false }) => {
+    // Dynamic lyrics sizing
+    const lyricFontSizePt = isLyric ? getLyricsFontSize(text) : fontScale?.fontSize || 32;
+    const lyricFontSizePx = ptToCssPreviewPx(lyricFontSizePt, 800);
 
-      {/* Slide Card — 16:9 ratio enforced via padding-top trick */}
+    return (
       <div
-        ref={containerRef}
-        className="relative w-full shadow-2xl shadow-black/60 rounded-sm overflow-hidden ring-1 ring-white/10"
+        className="relative shadow-2xl shadow-black/60 rounded-sm overflow-hidden ring-1 ring-white/10 w-full mb-8 last:mb-0"
         style={{ aspectRatio: '16 / 9', maxWidth: '1000px' }}
       >
         {/* Background layer */}
@@ -81,34 +81,27 @@ export default function SlidePreview({ settings, verseText, verseRef, fontScale 
 
         {/* Content area */}
         <div
-          className={`absolute inset-0 flex flex-col px-[5%] py-[5%] ${
-            settings.layout === 'center'
-              ? 'items-center justify-center'
-              : 'items-start justify-start pt-[7%]'
-          }`}
+          className={`absolute inset-0 flex flex-col px-[8%] py-[8%] items-center justify-center`}
         >
-          {hasVerse ? (
-            <div
-              className={`w-full ${settings.layout === 'center' ? 'text-center' : 'text-left'}`}
+          <div className="w-full text-center">
+            {/* The primary text */}
+            <p
+              className="leading-snug transition-all duration-300 font-bold whitespace-pre-wrap"
+              style={{
+                fontFamily: isLyric ? "'Montserrat', 'Inter', sans-serif" : settings.fontFamily,
+                fontSize: `${isLyric ? lyricFontSizePx : mainFontPx}px`,
+                color: settings.fontColor,
+                lineHeight: 1.25,
+                textShadow: '0 2px 8px rgba(0,0,0,0.6)',
+              }}
             >
-              {/* Verse body */}
-              <p
-                className="leading-snug transition-all duration-300"
-                style={{
-                  fontFamily: settings.fontFamily,
-                  fontSize: `${mainFontPx}px`,
-                  color: settings.fontColor,
-                  lineHeight: 1.4,
-                  marginBottom: `${refFontPx * 0.8}px`,
-                  textShadow: '0 1px 4px rgba(0,0,0,0.4)',
-                }}
-              >
-                {verseText}
-              </p>
+              {text}
+            </p>
 
-              {/* Reference */}
+            {/* Sub-text / Reference if applicable */}
+            {refText && (
               <p
-                className="transition-all duration-300"
+                className="mt-4 transition-all duration-300"
                 style={{
                   fontFamily: settings.fontFamily,
                   fontSize: `${refFontPx}px`,
@@ -118,67 +111,76 @@ export default function SlidePreview({ settings, verseText, verseRef, fontScale 
                   textShadow: '0 1px 3px rgba(0,0,0,0.4)',
                 }}
               >
-                — {verseRef}
+                — {refText}
               </p>
-            </div>
-          ) : (
-            // Empty state
-            <div className="flex flex-col items-center justify-center h-full w-full gap-3 opacity-30">
-              <svg
-                className="w-12 h-12"
-                style={{ color: settings.fontColor }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              <p
-                className="text-sm font-medium"
-                style={{ color: settings.fontColor, fontFamily: settings.fontFamily }}
-              >
-                Enter a verse reference and click Fetch
-              </p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Corner watermark */}
-        {hasVerse && (
-          <div className="absolute bottom-2 right-3 text-white/20 text-[9px] font-mono select-none pointer-events-none">
-            KJV
-          </div>
+        <div className="absolute bottom-2 right-3 text-white/20 text-[9px] font-mono select-none pointer-events-none">
+          {isLyric ? 'SONG' : 'KJV'}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex-1 flex flex-col items-center bg-[#0a0c14] p-8 overflow-y-auto min-h-0 custom-scrollbar">
+      {/* Header Label */}
+      <div className="flex items-center gap-2 mb-6 self-start">
+        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
+        <span className="text-xs font-bold text-slate-300 uppercase tracking-[0.2em]">
+          {appMode === 'bible' ? 'Bible Verse Preview' : 'Song Lyrics Preview'}
+        </span>
+      </div>
+
+      <div ref={containerRef} className="w-full flex flex-col items-center">
+        {appMode === 'bible' ? (
+          hasVerse ? (
+            <SlideCard text={verseText} refText={verseRef} />
+          ) : (
+            <div className="aspect-video w-full max-w-[1000px] border-2 border-dashed border-slate-800 rounded-lg flex flex-col items-center justify-center gap-4 opacity-40">
+               <svg className="w-16 h-16 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+               </svg>
+               <p className="text-sm font-medium text-slate-500">Search for a verse to generate slides</p>
+            </div>
+          )
+        ) : (
+          hasLyrics ? (
+            lyricsSlides.map((line, idx) => (
+              <SlideCard key={`${idx}-${line}`} text={line} isLyric={true} />
+            ))
+          ) : (
+            <div className="aspect-video w-full max-w-[1000px] border-2 border-dashed border-slate-800 rounded-lg flex flex-col items-center justify-center gap-4 opacity-40">
+               <svg className="w-16 h-16 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+               </svg>
+               <p className="text-sm font-medium text-slate-500">Paste lyrics in the sidebar to generate slides</p>
+            </div>
+          )
         )}
       </div>
 
-      {/* Metadata bar below preview */}
-      {hasVerse && fontScale && (
-        <div className="flex items-center gap-4 mt-4 text-xs text-slate-500">
-          <span>
-            <span className="text-slate-600">Chars:</span>{' '}
-            <span className="text-slate-400">{(verseText.length + (verseRef?.length ?? 0) + 5)}</span>
-          </span>
-          <span>·</span>
-          <span>
-            <span className="text-slate-600">Font:</span>{' '}
-            <span className="text-slate-400">{fontScale.sizeLabel}</span>
-          </span>
-          <span>·</span>
-          <span>
-            <span className="text-slate-600">Layout:</span>{' '}
-            <span className="text-slate-400 capitalize">{settings.layout}</span>
-          </span>
-          {fontScale.overflow && (
-            <>
-              <span>·</span>
-              <span className="text-amber-500">⚠ May overflow</span>
-            </>
-          )}
+      {/* Metadata / Status Bar */}
+      {(appMode === 'bible' && hasVerse) && (
+        <div className="flex items-center gap-4 mt-6 py-2 px-4 bg-slate-900/50 rounded-full border border-slate-800/50 text-[10px] text-slate-500 font-mono">
+          <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-indigo-500"/> Bible Mode</span>
+          <span className="w-px h-3 bg-slate-800"/>
+          <span>{verseText.length + (verseRef?.length ?? 0)} chars</span>
+          <span className="w-px h-3 bg-slate-800"/>
+          <span className="text-indigo-400 capitalize">{settings.layout}</span>
+        </div>
+      )}
+
+      {(appMode === 'lyrics' && hasLyrics) && (
+        <div className="flex items-center gap-4 mt-6 py-2 px-4 bg-slate-900/50 rounded-full border border-slate-800/50 text-[10px] text-slate-500 font-mono">
+          <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-purple-500"/> Lyrics Mode</span>
+          <span className="w-px h-3 bg-slate-800"/>
+          <span>{lyricsSlides.length} slides generated</span>
+          <span className="w-px h-3 bg-slate-800"/>
+          <span className="text-purple-400">Centered Layout</span>
         </div>
       )}
     </div>

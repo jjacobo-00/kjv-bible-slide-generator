@@ -6,6 +6,7 @@
 
 import pptxgen from 'pptxgenjs';
 import { getScaledFont } from './fontScaler.js';
+import { getLyricsFontSize } from './lyricsParser.js';
 
 /**
  * @typedef {Object} SlideSettings
@@ -30,11 +31,13 @@ function sanitizeHex(color) {
 /**
  * Generates a .pptx file with multiple verse slides and triggers a browser download.
  *
- * @param {Array} slides - Array of slide objects { id, verseState }
+ * @param {Array} slides - Array of slide objects (for Bible mode)
  * @param {Object} settings - Global slide settings
+ * @param {string} appMode - 'bible' | 'lyrics'
+ * @param {string[]} lyricsSlides - Array of lyric lines (for Lyrics mode)
  * @returns {Promise<void>}
  */
-export async function generateAndDownloadPptx(slides, settings) {
+export async function generateAndDownloadPptx(slides, settings, appMode = 'bible', lyricsSlides = []) {
   // Instantiate PptxGenJS
   const pres = new pptxgen();
 
@@ -43,91 +46,74 @@ export async function generateAndDownloadPptx(slides, settings) {
 
   let firstValidRef = null;
 
-  for (const slideData of slides) {
-    const { verseState } = slideData;
-    const { verseText, verseRef } = verseState;
+  if (appMode === 'bible') {
+    for (const slideData of slides) {
+      const { verseState } = slideData;
+      const { verseText, verseRef } = verseState;
 
-    // Skip empty slides
-    if (!verseText) continue;
+      // Skip empty slides
+      if (!verseText) continue;
 
-    if (!firstValidRef && verseRef) {
-      firstValidRef = verseRef;
-    }
+      if (!firstValidRef && verseRef) {
+        firstValidRef = verseRef;
+      }
 
-    const fullText = `${verseText}\n\n— ${verseRef}`;
-    const { fontSize } = getScaledFont(fullText);
+      const fullText = `${verseText}\n\n— ${verseRef}`;
+      const { fontSize } = getScaledFont(fullText);
 
-    const slide = pres.addSlide();
+      const slide = pres.addSlide();
 
-    // ── Background ────────────────────────────────────────────────────────────
-    if (settings.bgImageUrl && settings.bgImageUrl.trim().length > 0) {
-      try {
-        // PptxGenJS can use a URL directly for backgrounds
-        slide.background = { path: settings.bgImageUrl.trim() };
-      } catch {
-        // Fallback to color if the URL fails
+      // Background
+      if (settings.bgImageUrl && settings.bgImageUrl.trim().length > 0) {
+        try { slide.background = { path: settings.bgImageUrl.trim() }; } catch { slide.background = { color: sanitizeHex(settings.bgColor) }; }
+      } else {
         slide.background = { color: sanitizeHex(settings.bgColor) };
       }
-    } else {
-      slide.background = { color: sanitizeHex(settings.bgColor) };
+
+      const padding = 0.5;
+      slide.addText(
+        [
+          { text: verseText, options: { fontSize, fontFace: settings.fontFamily, color: sanitizeHex(settings.fontColor), breakLine: true } },
+          { text: '', options: { breakLine: true } },
+          { text: `— ${verseRef}`, options: { fontSize: Math.max(14, fontSize * 0.65), fontFace: settings.fontFamily, color: sanitizeHex(settings.fontColor), italic: true } },
+        ],
+        { x: padding, y: padding, w: 13.33 - padding * 2, h: 7.5 - padding * 2, valign: settings.layout === 'top' ? 'top' : 'middle', align: 'center', wrap: true }
+      );
     }
+  } else {
+    // Lyrics Mode
+    for (const line of lyricsSlides) {
+      const fontSize = getLyricsFontSize(line);
+      const slide = pres.addSlide();
 
-    // ── Text Configuration ────────────────────────────────────────────────────
-    const isTop = settings.layout === 'top';
-    const verticalAlign = isTop ? 'top' : 'middle';
-    const padding = 0.5; // inches of padding from slide edges
-
-    slide.addText(
-      [
-        // Verse body
-        {
-          text: verseText,
-          options: {
-            fontSize,
-            fontFace: settings.fontFamily,
-            color: sanitizeHex(settings.fontColor),
-            bold: false,
-            italic: false,
-            breakLine: true,
-          },
-        },
-        // Empty line spacer
-        {
-          text: '',
-          options: { breakLine: true },
-        },
-        // Verse reference — slightly smaller, italic
-        {
-          text: `— ${verseRef}`,
-          options: {
-            fontSize: Math.max(14, fontSize * 0.65),
-            fontFace: settings.fontFamily,
-            color: sanitizeHex(settings.fontColor),
-            italic: true,
-            bold: false,
-          },
-        },
-      ],
-      {
-        // Position: full slide minus padding
-        x: padding,
-        y: padding,
-        w: 13.33 - padding * 2,
-        h: 7.5 - padding * 2,
-        valign: verticalAlign,
-        align: 'center',
-        wrap: true,
+      // Background
+      if (settings.bgImageUrl && settings.bgImageUrl.trim().length > 0) {
+        try { slide.background = { path: settings.bgImageUrl.trim() }; } catch { slide.background = { color: sanitizeHex(settings.bgColor) }; }
+      } else {
+        slide.background = { color: sanitizeHex(settings.bgColor) };
       }
-    );
+
+      const padding = 0.8;
+      slide.addText(
+        [{ text: line, options: { fontSize, fontFace: "'Inter', Arial", color: sanitizeHex(settings.fontColor), bold: true } }],
+        { x: padding, y: padding, w: 13.33 - padding * 2, h: 7.5 - padding * 2, valign: 'middle', align: 'center', wrap: true }
+      );
+    }
+    firstValidRef = "Lyrics";
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
-  const fallbackRef = 'KJV_Slides';
-  const baseName = firstValidRef 
-    ? firstValidRef.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')
-    : fallbackRef;
-
   const dateStr = new Date().toISOString().split('T')[0]; // e.g. 2026-03-16
+  let fileName = '';
+
+  if (appMode === 'bible') {
+    const baseName = firstValidRef 
+      ? firstValidRef.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')
+      : 'Verse';
+    fileName = `${baseName}_Bible_Slide_${dateStr}.pptx`;
+  } else {
+    fileName = `Song_Lyrics_${dateStr}.pptx`;
+  }
   
-  await pres.writeFile({ fileName: `${baseName}_KJV_${dateStr}.pptx` });
+  await pres.writeFile({ fileName });
 }

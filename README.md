@@ -1,6 +1,6 @@
-# 📖 KJV Bible Slide Generator
+# 📖 KJV Bible & Lyrics Slide Generator
 
-A modern, high-performance web application designed to generate professional KJV Bible presentation slides. Built for speed, offline reliability, and beautiful aesthetics.
+A modern, high-performance web application designed to generate professional KJV Bible and Song Lyric presentation slides. Built for speed, offline reliability, and beautiful aesthetics.
 
 ![React](https://img.shields.io/badge/React-19-blue?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)
@@ -11,12 +11,20 @@ A modern, high-performance web application designed to generate professional KJV
 
 ## ✨ Features
 
-*   🚀 **PowerPoint Export**: Generate and download structured `.pptx` files compatible with Microsoft PowerPoint and Google Slides.
-*   💾 **Full Offline Engine**: Downloads and parses a local 4.5MB KJV JSON file on first load. No API dependency or usage limits.
-*   🔍 **Intelligent Autocomplete**: Deeply integrated scripture reference lookup (Books, Chapters, and Verses).
-*   🎨 **Custom Styles**: Global controls for Background Color/Images, Typography, and Layout that apply seamlessly across all slides.
-*   📱 **Live Preview**: Real-time rendering of your slides exactly as they will appear in the export.
-*   ➕ **Multi-Slide Support**: Create and manage multiple slides in a single session.
+### 📖 Bible Mode
+*   💾 **Full Offline Engine**: Downloads and parses a local 4.5MB KJV JSON file on first load. No API dependency.
+*   🔍 **Intelligent Autocomplete**: Deeply integrated scripture reference lookup for Books, Chapters, and Verses.
+*   ➕ **Multi-Slide Management**: Create and manage multiple scripture slides in a single session.
+
+### 🎵 Song Lyrics Mode
+*   🪄 **Smart Parsing**: Automatically detects and filters out structural labels like `[Verse 1]`, `(Chorus)`, or `Bridge:`.
+*   📏 **Dynamic Grouping**: Choose between **Standard (2 lines)** or **Compact (4 lines)** layouts per slide.
+*   ⚖️ **Auto-Scaling Typography**: Intelligent font scaling ensures long lines always fit perfectly within the 16:9 frame.
+
+### 🛠️ Core Capabilities
+*   🚀 **PowerPoint Export**: Generate structured `.pptx` files with distinct naming conventions for Bible vs. Lyrics.
+*   🎨 **Rich Design System**: Global controls for Background Color/Images, Premium Typography (Montserrat, Inter, Playfair), and Layout.
+*   📱 **Live Preview**: Real-time rendering mirrors exactly how the export will look.
 
 ---
 
@@ -54,20 +62,16 @@ A modern, high-performance web application designed to generate professional KJV
    npm run dev
    ```
 
-4. **Build for production**
-   ```bash
-   npm run build
-   ```
-
 ---
 
 ## 📖 Usage
 
-1.  **Search**: Type a book name (e.g., "John") to see autocomplete suggestions.
-2.  **Select**: Click a suggestion or type the full reference (e.g., "John 3:16").
-3.  **Customize**: Use the sidebar to change colors, fonts, and layout.
-4.  **Manage**: Add or remove slides using the "+" and "trash" icons.
-5.  **Export**: Click **Download PPTX** to save your presentation.
+1.  **Switch Modes**: Use the toggle in the sidebar to switch between **Bible** and **Lyrics**.
+2.  **Input Content**:
+    *   **Bible**: Type a reference (e.g., "John 3:16") and click Fetch.
+    *   **Lyrics**: Paste raw lyrics; structural noise is automatically filtered.
+3.  **Customize**: Choose your layout (Standard/Compact for lyrics, Top/Center for Bible) and background.
+4.  **Export**: Click **Download PPTX** to save your presentation locally.
 
 ---
 

@@ -92,6 +92,11 @@ export default function AdminPanel({
   onVerseQueryChange,
   onFetchVerse,
   fontScale,
+  appMode,
+  onSetAppMode,
+  lyricsRawText,
+  onLyricsChange,
+  lyricsSlides,
 }) {
   const verseState = activeSlide.verseState;
   const verseQuery = activeSlide.verseQuery;
@@ -130,10 +135,12 @@ export default function AdminPanel({
 
   // Export handler
   const handleExport = async () => {
-    if (!hasAnyVerse) return;
+    const canExport = appMode === 'bible' ? hasAnyVerse : (lyricsSlides && lyricsSlides.length > 0);
+    if (!canExport) return;
+
     setIsExporting(true);
     try {
-      await generateAndDownloadPptx(slides, settings);
+      await generateAndDownloadPptx(slides, settings, appMode, lyricsSlides);
     } catch (err) {
       console.error('PPTX generation failed:', err);
     } finally {
@@ -152,177 +159,240 @@ export default function AdminPanel({
         <p className="text-xs text-slate-400">PowerPoint Export</p>
       </div>
 
+      <div className="px-5 py-3 flex border-b border-slate-700/50">
+        <button
+          onClick={() => onSetAppMode('bible')}
+          className={`flex-1 py-1.5 text-xs font-bold rounded-l-md transition-colors ${
+            appMode === 'bible'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-slate-800 text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          Bible
+        </button>
+        <button
+          onClick={() => onSetAppMode('lyrics')}
+          className={`flex-1 py-1.5 text-xs font-bold rounded-r-md transition-colors ${
+            appMode === 'lyrics'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-slate-800 text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          Lyrics
+        </button>
+      </div>
+
       <div className="flex flex-col gap-5 px-5 py-5 flex-1">
 
-        {/* ── Slides Manager ── */}
-        <section>
-          <div className="flex items-center justify-between mb-2">
-            <SectionLabel>Slides</SectionLabel>
-            <button
-               onClick={onAddSlide}
-               className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
-               title="Add new slide"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
-              Add
-            </button>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-            {slides.map((s, index) => (
-              <div 
-                key={s.id} 
-                className={`flex items-center h-8 rounded border shrink-0 transition-colors overflow-hidden ${
-                  activeSlideId === s.id
-                    ? 'border-indigo-500 bg-indigo-900/40 text-white'
-                    : 'border-slate-600 bg-slate-800 text-slate-400 hover:border-slate-500'
-                }`}
-              >
+        {/* ── Slide Content Input (Bible vs Lyrics) ── */}
+        {appMode === 'bible' ? (
+          <>
+            {/* ── Slides Manager ── */}
+            <section>
+              <div className="flex items-center justify-between mb-2">
+                <SectionLabel>Slides</SectionLabel>
                 <button
-                  onClick={() => onSetActiveSlide(s.id)}
-                  className={`flex items-center justify-center h-full text-xs font-semibold px-4 hover:text-white transition-colors outline-none`}
+                   onClick={onAddSlide}
+                   className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                   title="Add new slide"
                 >
-                  {index + 1}
-                </button>
-                {slides.length > 1 && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onRemoveSlide(s.id); }}
-                    className="flex items-center justify-center h-full px-2 bg-black/20 hover:bg-red-500/20 hover:text-red-400 text-slate-500 transition-colors outline-none"
-                    title="Delete slide"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <div className="border-t border-slate-700/50" />
-
-        {/* ── Verse Lookup ── */}
-        <section className="relative">
-          <SectionLabel>Scripture Reference</SectionLabel>
-          <div className="flex gap-2 relative">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={verseQuery}
-                onChange={(e) => {
-                  onVerseQueryChange(e.target.value);
-                  fetchSuggestions(e.target.value);
-                  setShowSuggestions(true);
-                  setSuggestionIndex(-1);
-                }}
-                onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    setSuggestionIndex(i => Math.min(i + 1, suggestions.length - 1));
-                  } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    setSuggestionIndex(i => Math.max(i - 1, -1));
-                  } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
-                      onVerseQueryChange(suggestions[suggestionIndex]);
-                      setShowSuggestions(false);
-                      // Don't auto-fetch if we're just completing a book or chapter (ends with space or colon)
-                      if (!suggestions[suggestionIndex].endsWith(' ') && !suggestions[suggestionIndex].endsWith(':')) {
-                        setTimeout(() => handleFetch(), 50);
-                      } else {
-                        // Let them keep typing
-                        const newQ = suggestions[suggestionIndex];
-                        fetchSuggestions(newQ);
-                      }
-                    } else {
-                      handleFetch();
-                      setShowSuggestions(false);
-                    }
-                  } else if (e.key === 'Escape') {
-                    setShowSuggestions(false);
-                  }
-                }}
-                placeholder="e.g. John 3:16"
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
-                autoComplete="off"
-              />
-              
-              {/* Autocomplete Dropdown */}
-              {showSuggestions && suggestions.length > 0 && (
-                <ul className="absolute z-50 left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto">
-                  {suggestions.map((sug, i) => (
-                    <li
-                      key={sug}
-                      onClick={() => {
-                        onVerseQueryChange(sug);
-                        setShowSuggestions(false);
-                        if (!sug.endsWith(' ') && !sug.endsWith(':')) {
-                          setTimeout(() => onFetchVerse(sug), 50);
-                        } else {
-                           fetchSuggestions(sug);
-                           setTimeout(() => setShowSuggestions(true), 10);
-                        }
-                      }}
-                      onMouseEnter={() => setSuggestionIndex(i)}
-                      className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
-                        i === suggestionIndex ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-700'
-                      }`}
-                    >
-                      {sug}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            
-            <button
-              onClick={() => { setShowSuggestions(false); handleFetch(); }}
-              disabled={verseState.loading}
-              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap"
-            >
-              {verseState.loading ? (
-                <>
-                  <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>Loading</span>
-                </>
-              ) : (
-                'Fetch'
+                  Add
+                </button>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                {slides.map((s, index) => (
+                  <div 
+                    key={s.id} 
+                    className={`flex items-center h-8 rounded border shrink-0 transition-colors overflow-hidden ${
+                      activeSlideId === s.id
+                        ? 'border-indigo-500 bg-indigo-900/40 text-white'
+                        : 'border-slate-600 bg-slate-800 text-slate-400 hover:border-slate-500'
+                    }`}
+                  >
+                    <button
+                      onClick={() => onSetActiveSlide(s.id)}
+                      className={`flex items-center justify-center h-full text-xs font-semibold px-4 hover:text-white transition-colors outline-none`}
+                    >
+                      {index + 1}
+                    </button>
+                    {slides.length > 1 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onRemoveSlide(s.id); }}
+                        className="flex items-center justify-center h-full px-2 bg-black/20 hover:bg-red-500/20 hover:text-red-400 text-slate-500 transition-colors outline-none"
+                        title="Delete slide"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <div className="border-t border-slate-700/50" />
+
+            {/* ── Verse Lookup ── */}
+            <section className="relative">
+              <SectionLabel>Scripture Reference</SectionLabel>
+              <div className="flex gap-2 relative">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={verseQuery}
+                    onChange={(e) => {
+                      onVerseQueryChange(e.target.value);
+                      fetchSuggestions(e.target.value);
+                      setShowSuggestions(true);
+                      setSuggestionIndex(-1);
+                    }}
+                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setSuggestionIndex(i => Math.min(i + 1, suggestions.length - 1));
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setSuggestionIndex(i => Math.max(i - 1, -1));
+                      } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+                          onVerseQueryChange(suggestions[suggestionIndex]);
+                          setShowSuggestions(false);
+                          // Don't auto-fetch if we're just completing a book or chapter (ends with space or colon)
+                          if (!suggestions[suggestionIndex].endsWith(' ') && !suggestions[suggestionIndex].endsWith(':')) {
+                            setTimeout(() => handleFetch(), 50);
+                          } else {
+                            // Let them keep typing
+                            const newQ = suggestions[suggestionIndex];
+                            fetchSuggestions(newQ);
+                          }
+                        } else {
+                          handleFetch();
+                          setShowSuggestions(false);
+                        }
+                      } else if (e.key === 'Escape') {
+                        setShowSuggestions(false);
+                      }
+                    }}
+                    placeholder="e.g. John 3:16"
+                    className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
+                    autoComplete="off"
+                  />
+                  
+                  {/* Autocomplete Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <ul className="absolute z-50 left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+                      {suggestions.map((sug, i) => (
+                        <li
+                          key={sug}
+                          onClick={() => {
+                            onVerseQueryChange(sug);
+                            setShowSuggestions(false);
+                            if (!sug.endsWith(' ') && !sug.endsWith(':')) {
+                              setTimeout(() => onFetchVerse(sug), 50);
+                            } else {
+                               fetchSuggestions(sug);
+                               setTimeout(() => setShowSuggestions(true), 10);
+                            }
+                          }}
+                          onMouseEnter={() => setSuggestionIndex(i)}
+                          className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
+                            i === suggestionIndex ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-700'
+                          }`}
+                        >
+                          {sug}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                
+                <button
+                  onClick={() => { setShowSuggestions(false); handleFetch(); }}
+                  disabled={verseState.loading}
+                  className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  {verseState.loading ? (
+                    <>
+                      <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      <span>Loading</span>
+                    </>
+                  ) : (
+                    'Fetch'
+                  )}
+                </button>
+              </div>
+
+              {/* Error state */}
+              {verseState.error && (
+                <div className="mt-2 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded-lg text-xs text-red-300">
+                  ⚠ {verseState.error}
+                </div>
               )}
-            </button>
-          </div>
 
-          {/* Error state */}
-          {verseState.error && (
-            <div className="mt-2 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded-lg text-xs text-red-300">
-              ⚠ {verseState.error}
-            </div>
-          )}
+              {/* Overflow warning */}
+              {fontScale?.overflow && verseState.verseText && (
+                <div className="mt-2 px-3 py-2 bg-amber-900/40 border border-amber-700/50 rounded-lg text-xs text-amber-300">
+                  ⚠ This verse is very long ({verseState.verseText.length + (verseState.verseRef?.length ?? 0)} chars). Text may overflow the slide. Consider splitting into multiple slides.
+                </div>
+              )}
 
-          {/* Overflow warning */}
-          {fontScale?.overflow && verseState.verseText && (
-            <div className="mt-2 px-3 py-2 bg-amber-900/40 border border-amber-700/50 rounded-lg text-xs text-amber-300">
-              ⚠ This verse is very long ({verseState.verseText.length + (verseState.verseRef?.length ?? 0)} chars). Text may overflow the slide. Consider splitting into multiple slides.
-            </div>
-          )}
+              {/* Font size indicator */}
+              {fontScale && verseState.verseText && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-slate-500">Auto font size:</span>
+                  <span className="text-xs font-medium text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded-full">
+                    {fontScale.sizeLabel}
+                  </span>
+                </div>
+              )}
+            </section>
+          </>
+        ) : (
+          /* ── Lyrics Input ── */
+          <section className="flex flex-col flex-1 min-h-0">
+            <SectionLabel>Song Lyrics</SectionLabel>
+            <p className="text-[10px] text-slate-500 mb-2 leading-relaxed">
+              Paste song lyrics below. Each non-empty line becomes a slide. 
+              Labels like [Verse 1] or Chorus are automatically filtered out.
+            </p>
+            <textarea
+              value={lyricsRawText}
+              onChange={(e) => onLyricsChange(e.target.value)}
+              placeholder="Paste lyrics here..."
+              className="flex-1 min-h-[200px] w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors resize-none font-mono mb-4"
+            />
 
-          {/* Font size indicator */}
-          {fontScale && verseState.verseText && (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-xs text-slate-500">Auto font size:</span>
-              <span className="text-xs font-medium text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded-full">
-                {fontScale.sizeLabel}
-              </span>
+            <SectionLabel>Lyrics Layout</SectionLabel>
+            <div className="flex gap-2">
+              {[
+                { label: 'Standard (2 lines)', value: 2 },
+                { label: 'Compact (4 lines)', value: 4 },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => onSettingsChange('lyricsLinesPerSlide', opt.value)}
+                  className={`flex-1 py-2 px-1 rounded-lg border text-[10px] font-bold transition-all ${
+                    settings.lyricsLinesPerSlide === opt.value
+                      ? 'border-indigo-500 bg-indigo-900/40 text-indigo-300'
+                      : 'border-slate-700 bg-slate-800 text-slate-500 hover:border-slate-600'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
         <div className="border-t border-slate-700/50" />
 
@@ -450,9 +520,9 @@ export default function AdminPanel({
       <div className="px-5 py-4 border-t border-slate-700/60 bg-slate-900/80">
         <button
           onClick={handleExport}
-          disabled={!hasAnyVerse || isExporting}
+          disabled={(appMode === 'bible' ? !hasAnyVerse : lyricsRawText.trim().length === 0) || isExporting}
           className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${
-            hasAnyVerse && !isExporting
+            ((appMode === 'bible' && hasAnyVerse) || (appMode === 'lyrics' && lyricsRawText.trim().length > 0)) && !isExporting
               ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white cursor-pointer hover:shadow-indigo-500/30 hover:shadow-xl active:scale-95'
               : 'bg-slate-700 text-slate-500 cursor-not-allowed'
           }`}
@@ -476,9 +546,14 @@ export default function AdminPanel({
             </>
           )}
         </button>
-        {!hasAnyVerse && (
+        {!hasAnyVerse && appMode === 'bible' && (
           <p className="text-center text-xs text-slate-600 mt-2">
             Fetch a verse to enable export
+          </p>
+        )}
+        {lyricsRawText.trim().length === 0 && appMode === 'lyrics' && (
+          <p className="text-center text-xs text-slate-600 mt-2">
+            Paste lyrics to enable export
           </p>
         )}
       </div>
