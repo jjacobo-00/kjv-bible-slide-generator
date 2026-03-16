@@ -77,5 +77,5 @@ This project is licensed under the MIT License.
 
 ---
 
-Developed with ❤️ for the community.
+Developed for Christian Baptist Tabernacle.
 <!-- Updated: 2026-03-16 -->
