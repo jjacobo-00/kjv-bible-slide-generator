@@ -55,11 +55,42 @@ export default function App() {
       verseState: { ...s.verseState, loading: true, error: null },
     }));
     try {
-      const { verseText, verseRef } = await fetchBibleVerse(query);
-      updateActiveSlide((s) => ({
-        ...s,
-        verseState: { ...s.verseState, verseText, verseRef, loading: false },
-      }));
+      const results = await fetchBibleVerse(query);
+      if (!results || results.length === 0) throw new Error('No verses found');
+
+      setSlides((prev) => {
+        const activeIndex = prev.findIndex((s) => s.id === activeSlideId);
+        if (activeIndex === -1) return prev;
+
+        const newSlides = [...prev];
+        // 1. Update the current active slide with result #1
+        newSlides[activeIndex] = {
+          ...newSlides[activeIndex],
+          verseState: { 
+            ...newSlides[activeIndex].verseState, 
+            verseText: results[0].verseText, 
+            verseRef: results[0].verseRef, 
+            loading: false 
+          },
+        };
+
+        // 2. If it's a range, insert additional slides after this one
+        if (results.length > 1) {
+          const insertTime = Date.now();
+          const extraSlides = results.slice(1).map((res, idx) => ({
+            id: insertTime + idx + 1,
+            verseState: { 
+              verseText: res.verseText, 
+              verseRef: res.verseRef, 
+              loading: false, 
+              error: null 
+            },
+            verseQuery: res.verseRef
+          }));
+          newSlides.splice(activeIndex + 1, 0, ...extraSlides);
+        }
+        return newSlides;
+      });
     } catch (err) {
       updateActiveSlide((s) => ({
         ...s,

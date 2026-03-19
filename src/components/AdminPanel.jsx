@@ -424,16 +424,56 @@ export default function AdminPanel({
             onSelect={(c) => onSettingsChange('bgColor', c)}
           />
 
-          {/* BG Image URL */}
+          {/* BG Image Selection */}
           <div className="mt-3">
-            <label className="text-xs text-slate-400 block mb-1">Image URL <span className="text-slate-600">(optional, overrides color)</span></label>
-            <input
-              type="url"
-              value={settings.bgImageUrl}
-              onChange={update('bgImageUrl')}
-              placeholder="https://example.com/bg.jpg"
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors"
-            />
+            <label className="text-xs text-slate-400 block mb-1.5">Background Image</label>
+            <div className="flex flex-col gap-2">
+              <input
+                type="url"
+                value={settings.bgImageUrl}
+                onChange={update('bgImageUrl')}
+                placeholder="https://example.com/bg.jpg"
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+              
+              <div className="flex items-center gap-2">
+                <label className="flex-1 cursor-pointer">
+                  <div className="flex items-center justify-center gap-2 py-2 px-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-xs font-semibold text-slate-200 transition-colors">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Upload Image
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          onSettingsChange('bgImageUrl', event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+                
+                {settings.bgImageUrl && (
+                  <button
+                    onClick={() => onSettingsChange('bgImageUrl', '')}
+                    className="p-2 bg-slate-800 hover:bg-red-900/30 text-slate-400 hover:text-red-400 border border-slate-700 rounded-lg transition-colors"
+                    title="Clear background"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 

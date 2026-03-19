@@ -65,7 +65,7 @@ export async function fetchBibleVerse(query) {
   
   if (startVerse > endV) throw new Error('Invalid verse range.');
   
-  let verses = [];
+  let results = [];
   for (let i = startVerse - 1; i < endV; i++) {
     // The JSON contains brackets for words added by translators, e.g. "{was}".
     // It also contains marginal notes, e.g. "{mantle: or, robe}". 
@@ -75,20 +75,16 @@ export async function fetchBibleVerse(query) {
       .replace(/\s+/g, ' ')
       .trim();
 
-    // If returning multiple verses, prefix with the verse number for clarity
-    if (endV > startVerse) {
-      verses.push(`${i + 1} ${cleanedText}`);
-    } else {
-      verses.push(cleanedText); // Just the verse text if it's a single verse
-    }
+    const currentVerseNum = i + 1;
+    const ref = `${book.name} ${chapterNum}:${currentVerseNum}`;
+    
+    results.push({
+      verseText: cleanedText,
+      verseRef: ref
+    });
   }
   
-  const ref = `${book.name} ${chapterNum}:${startVerse}${endV > startVerse ? `-${endV}` : ''}`;
-  
-  return {
-    verseText: verses.join('\n\n'),
-    verseRef: ref
-  };
+  return results; // Return the array of verse objects
 }
 
 /**
