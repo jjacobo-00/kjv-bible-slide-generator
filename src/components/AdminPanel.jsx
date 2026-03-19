@@ -224,50 +224,72 @@ export default function AdminPanel({
                   Add
                 </button>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar transition-all">
-                {slides.map((s, index) => (
-                  <div 
-                    key={s.id} 
-                    className={`group relative h-14 w-24 rounded-xl border shrink-0 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center ${
-                      activeSlideId === s.id
-                        ? 'border-indigo-500 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-lg shadow-indigo-500/30 -translate-y-0.5 scale-105 z-10'
-                        : 'border-slate-700 bg-slate-800/50 text-slate-500 hover:border-slate-500 hover:text-slate-200'
-                    }`}
-                    onClick={() => onSetActiveSlide(s.id)}
-                  >
-                    <span className={`text-lg font-black tracking-tight ${activeSlideId === s.id ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>
-                      {index + 1}
-                    </span>
-                    
-                    {/* Tiny summary line (ref) */}
-                    {s.verseState.verseRef && (
-                      <span className={`text-[8px] font-bold uppercase tracking-tighter truncate w-[80%] text-center mt-0.5 opacity-60 ${activeSlideId === s.id ? 'text-indigo-100' : 'text-slate-600'}`}>
-                        {s.verseState.verseRef.split(' ').slice(0, 1)}
-                      </span>
-                    )}
+              <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar transition-all">
+                {slides.map((s, index) => {
+                  const parts = s.verseState.verseRef?.split(' ') || [];
+                  const book = parts.slice(0, -1).join(' ');
+                  const chapVer = parts.slice(-1)[0];
+                  
+                  // Thumbnail bg matches global style
+                  const thumbBg = settings.bgImageUrl 
+                    ? { backgroundImage: `url(${settings.bgImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                    : { backgroundColor: settings.bgColor };
 
-                    {/* Hover Delete Button */}
-                    {slides.length > 1 && (
-                      <button
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          onRemoveSlide(s.id); 
-                        }}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500/90 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg scale-75 group-hover:scale-100 z-20"
-                        title="Delete slide"
-                      >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
+                  return (
+                    <div 
+                      key={s.id} 
+                      className={`group relative h-16 w-24 rounded-xl border shrink-0 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center overflow-hidden ${
+                        activeSlideId === s.id
+                          ? 'border-indigo-500 shadow-xl shadow-indigo-500/20 -translate-y-1 scale-105 z-10'
+                          : 'border-slate-700 hover:border-slate-500'
+                      }`}
+                      onClick={() => onSetActiveSlide(s.id)}
+                    >
+                      {/* Mini Background Layer */}
+                      <div className="absolute inset-0 opacity-40 transition-opacity group-hover:opacity-60" style={thumbBg} />
+                      <div className={`absolute inset-0 transition-colors ${activeSlideId === s.id ? 'bg-indigo-900/40' : 'bg-slate-900/60'}`} />
 
-                    {/* Active Indicator Glow */}
-                    {activeSlideId === s.id && (
-                       <div className="absolute inset-0 rounded-xl bg-indigo-500/20 animate-pulse pointer-events-none" />
-                    )}
-                  </div>
-                ))}
+                      <div className="relative z-10 flex flex-col items-center">
+                        <span className={`text-xl font-black tracking-tight leading-none ${activeSlideId === s.id ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>
+                          {index + 1}
+                        </span>
+                        
+                        {/* Split reference for visibility */}
+                        {s.verseState.verseRef && (
+                          <div className={`flex flex-col items-center leading-none mt-1 ${activeSlideId === s.id ? 'text-white' : 'text-slate-600 group-hover:text-slate-400'}`}>
+                             <span className="text-[7px] font-black uppercase tracking-tighter truncate w-20 text-center">
+                               {book}
+                             </span>
+                             <span className="text-[10px] font-black tracking-tight mt-0.5 font-mono">
+                               {chapVer}
+                             </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Hover Delete Button */}
+                      {slides.length > 1 && (
+                        <button
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            onRemoveSlide(s.id); 
+                          }}
+                          className="absolute top-1.5 right-1.5 w-5 h-5 bg-red-500/90 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg scale-75 group-hover:scale-100 z-20"
+                          title="Delete slide"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+
+                      {/* Active indicator bar */}
+                      {activeSlideId === s.id && (
+                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500 animate-pulse" />
+                      )}
+                    </div>
+                  );
+                })}
 
                 {/* Inline Add Button (Quick Access) */}
                 <button
@@ -286,6 +308,7 @@ export default function AdminPanel({
             {isReordering && (
               <SlideOrganizerModal 
                 slides={slides} 
+                settings={settings}
                 onClose={() => setIsReordering(false)}
                 onSave={(newSlides) => {
                   onReorderSave(newSlides);

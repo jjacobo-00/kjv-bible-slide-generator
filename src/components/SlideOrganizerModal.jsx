@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function SlideOrganizerModal({ slides, onClose, onSave }) {
+export default function SlideOrganizerModal({ slides, onClose, onSave, settings }) {
   const [tempSlides, setTempSlides] = useState([...slides]);
 
   const moveSlide = (idx, direction) => {
@@ -58,56 +58,64 @@ export default function SlideOrganizerModal({ slides, onClose, onSave }) {
         </div>
 
         {/* Grid Area */}
-        <div className="flex-1 overflow-y-auto p-8 bg-black/20 custom-scrollbar">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                {tempSlides.map((s, idx) => (
-                    <div 
-                      key={s.id} 
-                      draggable="true"
-                      onDragStart={() => handleDragStart(idx)}
-                      onDragOver={handleDragOver}
-                      onDrop={() => handleDrop(idx)}
-                      className={`group relative bg-[#24273a] border rounded-xl overflow-hidden shadow-xl transition-all hover:shadow-indigo-500/20 cursor-grab active:cursor-grabbing ${
-                        draggedIdx === idx 
-                          ? 'opacity-40 border-dashed border-indigo-400 scale-95' 
-                          : 'border-slate-700 hover:border-indigo-500/50 hover:scale-[1.02]'
-                      }`}
-                    >
-                        {/* Slide Miniature Preview */}
-                        <div className="aspect-video bg-slate-900 flex items-center justify-center p-5 text-center overflow-hidden">
-                            <p className="text-[10px] text-slate-300 leading-relaxed line-clamp-4 font-medium italic opacity-80 pointer-events-none">
-                                {s.verseState.verseText || 'Empty Slide Content'}
-                            </p>
-                        </div>
-                        
-                        {/* Slide Number Badge */}
-                        <div className="absolute top-3 left-3 bg-indigo-600 text-white text-[11px] font-black px-2.5 py-0.5 rounded-full shadow-2xl border border-indigo-400/30">
-                            {idx + 1}
-                        </div>
+        <div className="flex-1 overflow-y-auto p-10 bg-black/20 custom-scrollbar">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                {tempSlides.map((s, idx) => {
+                    const parts = s.verseState.verseRef?.split(' ') || [];
+                    const book = parts.slice(0, -1).join(' ');
+                    const chapVer = parts.slice(-1)[0];
+                    
+                    const thumbBg = settings.bgImageUrl 
+                      ? { backgroundImage: `url(${settings.bgImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                      : { backgroundColor: settings.bgColor };
 
-                        {/* Drag Handle Icon (Static) */}
-                        <div className="absolute top-3 right-3 text-slate-500/40 group-hover:text-slate-200 transition-colors pointer-events-none">
-                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                             </svg>
-                        </div>
+                    return (
+                      <div 
+                        key={s.id} 
+                        draggable="true"
+                        onDragStart={() => handleDragStart(idx)}
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleDrop(idx)}
+                        className={`group relative aspect-video rounded-2xl border shadow-2xl transition-all duration-300 cursor-grab active:cursor-grabbing overflow-hidden flex flex-col items-center justify-center ${
+                          draggedIdx === idx 
+                            ? 'opacity-40 border-dashed border-indigo-400 scale-95' 
+                            : 'border-slate-700 hover:border-indigo-500/50 hover:scale-105 hover:shadow-indigo-500/10'
+                        }`}
+                      >
+                          {/* Mini Background Layer */}
+                          <div className="absolute inset-0 opacity-40 transition-opacity group-hover:opacity-60" style={thumbBg} />
+                          <div className="absolute inset-0 bg-slate-900/60" />
 
-                        {/* Drag Indicator Overlay (Visible on hover) */}
-                        <div className={`absolute inset-0 bg-indigo-600/10 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center pointer-events-none ${draggedIdx !== null ? 'hidden' : ''}`}>
-                             <div className="bg-slate-900/80 px-3 py-1.5 rounded-full border border-indigo-500/30 flex items-center gap-2 shadow-2xl scale-90 group-hover:scale-100 transition-transform">
-                                <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3-0.5a3 3 0 006 0V6a1.5 1.5 0 113 0V12m-3-0.5a3 3 0 006 0V6a1.5 1.5 0 113 0V12" />
-                                </svg>
-                                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Drag to Move</span>
-                             </div>
-                        </div>
-                        
-                        {/* Ref Label */}
-                        <div className="px-4 py-3 bg-slate-900/80 border-t border-slate-700/50 flex items-center justify-between pointer-events-none">
-                            <p className="text-[10px] text-slate-400 font-bold truncate max-w-[85%]">{s.verseState.verseRef || 'No Reference'}</p>
-                        </div>
-                    </div>
-                ))}
+                          {/* Content Overlay */}
+                          <div className="relative z-10 flex flex-col items-center p-4">
+                              <span className="text-2xl font-black text-white/50 tracking-tighter mb-1">
+                                  {idx + 1}
+                              </span>
+                              
+                              {s.verseState.verseRef && (
+                                <div className="flex flex-col items-center leading-tight">
+                                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                     {book}
+                                   </span>
+                                   <span className="text-sm font-black text-white mt-0.5 font-mono">
+                                     {chapVer}
+                                   </span>
+                                </div>
+                              )}
+                          </div>
+  
+                          {/* Drag Indicator Overlay (Visible on hover) */}
+                          <div className={`absolute inset-0 bg-indigo-600/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center pointer-events-none ${draggedIdx !== null ? 'hidden' : ''}`}>
+                               <div className="bg-slate-900/90 px-4 py-2 rounded-full border border-indigo-500/50 flex items-center gap-2 shadow-2xl scale-90 group-hover:scale-100 transition-transform">
+                                  <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3-0.5a3 3 0 006 0V6a1.5 1.5 0 113 0V12m-3-0.5a3 3 0 006 0V6a1.5 1.5 0 113 0V12" />
+                                  </svg>
+                                  <span className="text-xs font-black text-white uppercase tracking-widest">Move Slide</span>
+                               </div>
+                          </div>
+                      </div>
+                    );
+                })}
             </div>
         </div>
 
