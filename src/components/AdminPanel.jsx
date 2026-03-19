@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { generateAndDownloadPptx } from '../utils/pptxGenerator.js';
 import { getAutocompleteSuggestions } from '../utils/bibleApi.js';
 import SlideOrganizerModal from './SlideOrganizerModal';
-import cbtLogo from '../assets/CBT Logo.svg';
+import logo from '../assets/logo.svg';
 
 // ── Font Options ──────────────────────────────────────────────────────────────
 const FONT_OPTIONS = [
@@ -168,7 +168,7 @@ export default function AdminPanel({
   return (
     <aside className="w-80 min-w-[280px] flex-shrink-0 bg-slate-900 border-r border-slate-700/50 flex flex-col h-screen overflow-y-auto shadow-2xl">
       <div className="px-6 py-8 border-b border-slate-700/60 bg-gradient-to-br from-indigo-900/40 via-slate-900 to-slate-900 flex items-center justify-center gap-4">
-        <img src={cbtLogo} alt="CBT Logo" className="w-12 h-12 object-contain drop-shadow-xl" />
+        <img src={logo} alt="Logo" className="w-12 h-12 object-contain drop-shadow-xl" />
         <div className="flex flex-col">
           <h1 className="text-[1.1rem] font-extrabold text-white tracking-tight leading-[1.2]">
             CBT KJV Bible &<br/>Lyrics Generator
