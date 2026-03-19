@@ -149,7 +149,7 @@ export default function SlidePreview({
     const scrollPos = e.target.scrollTop;
     const containerHeight = e.target.clientHeight;
     const totalSlides = appMode === 'bible' 
-      ? slides.filter(s => s.verseState.verseText).length 
+      ? slides.length 
       : lyricsSlides.length;
     
     if (totalSlides <= 1) {
@@ -166,8 +166,7 @@ export default function SlidePreview({
     setCurrentSlideIndex(index);
     
     if (appMode === 'bible') {
-      const bibleSlidesContent = slides.filter(s => s.verseState.verseText);
-      const scrolledSlide = bibleSlidesContent[index];
+      const scrolledSlide = slides[index];
       if (scrolledSlide && scrolledSlide.id !== activeSlideId) {
         onSetActiveSlide(scrolledSlide.id);
       }
@@ -183,13 +182,13 @@ export default function SlidePreview({
 
   useEffect(() => {
     const totalSlides = appMode === 'bible' 
-      ? slides.filter(s => s.verseState.verseText).length 
+      ? slides.length 
       : lyricsSlides.length;
     setShowScrollHint(totalSlides > 1);
   }, [appMode, slides, lyricsSlides.length]);
 
-  const bibleSlidesContent = useMemo(() => slides.filter(s => s.verseState.verseText), [slides]);
-  const hasBibleContent = bibleSlidesContent.length > 0;
+  const bibleSlidesToRender = useMemo(() => slides, [slides]);
+  const hasBibleContent = bibleSlidesToRender.length > 0;
   const hasLyrics = lyricsSlides.length > 0;
 
   return (
@@ -209,9 +208,9 @@ export default function SlidePreview({
         <div className="w-full flex flex-col items-center gap-[20vh]">
           {appMode === 'bible' ? (
             hasBibleContent ? (
-              bibleSlidesContent.map((s) => (
+              bibleSlidesToRender.map((s) => (
                 <div key={s.id} ref={el => slideRefs.current[s.id] = el} className="w-full flex justify-center snap-center">
-                  <SlideCard text={s.verseState.verseText} refText={s.verseState.verseRef} />
+                  <SlideCard text={s.verseState.verseText || ""} refText={s.verseState.verseRef} />
                 </div>
               ))
             ) : (
@@ -241,13 +240,13 @@ export default function SlidePreview({
         </div>
 
         {/* Floating Page Indicator */}
-        {((appMode === 'lyrics' && lyricsSlides.length > 1) || (appMode === 'bible' && hasBibleContent && bibleSlidesContent.length > 1)) && (
+        {((appMode === 'lyrics' && lyricsSlides.length > 1) || (appMode === 'bible' && hasBibleContent && bibleSlidesToRender.length > 1)) && (
           <div className="fixed bottom-24 right-10 bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-full px-4 py-2 flex items-center gap-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <span className="text-[10px] font-bold text-indigo-400">SLIDE</span>
              <span className="text-[14px] font-black text-white">
                {currentSlideIndex + 1}
                <span className="text-slate-500 font-medium px-1">/</span>
-               {appMode === 'lyrics' ? lyricsSlides.length : bibleSlidesContent.length}
+               {appMode === 'lyrics' ? lyricsSlides.length : bibleSlidesToRender.length}
              </span>
           </div>
         )}
@@ -267,7 +266,7 @@ export default function SlidePreview({
           <div className="flex items-center gap-4 mt-12 py-2 px-4 bg-slate-900/50 rounded-full border border-slate-800/50 text-[10px] text-slate-500 font-mono">
             <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-indigo-500"/> Bible Mode</span>
             <span className="w-px h-3 bg-slate-800"/>
-            <span>{bibleSlidesContent.length} slides</span>
+            <span>{bibleSlidesToRender.length} slides</span>
             <span className="w-px h-3 bg-slate-800"/>
             <span className="text-indigo-400 capitalize">{settings.layout}</span>
           </div>
