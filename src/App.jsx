@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS = {
   fontColor: '#F8F1E0',
   layout: 'center', // 'center' | 'top'
   lyricsLinesPerSlide: 2,
+  baseFontSize: 42, // base size for dynamic font scaling
 };
 
 const createNewSlide = (id) => ({

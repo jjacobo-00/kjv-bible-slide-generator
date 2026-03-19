@@ -436,6 +436,22 @@ export default function AdminPanel({
         <section>
           <SectionLabel>Typography</SectionLabel>
 
+          {/* Base Font Size */}
+          <div className="mb-3">
+            <label className="text-xs text-slate-400 flex justify-between mb-1">
+              <span>Base Font Size</span>
+              <span className="text-indigo-400 font-mono">{settings.baseFontSize}pt</span>
+            </label>
+            <input
+              type="range"
+              min="16"
+              max="120"
+              value={settings.baseFontSize}
+              onChange={(e) => onSettingsChange('baseFontSize', parseInt(e.target.value, 10))}
+              className="w-full accent-indigo-500 hover:accent-indigo-400 transition-all cursor-pointer"
+            />
+          </div>
+
           {/* Font Family */}
           <div className="mb-3">
             <label className="text-xs text-slate-400 block mb-1">Font Family</label>

@@ -32,10 +32,10 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
 
   // Compute CSS pixel font sizes from pt values using the preview card width
   const mainFontPx = useMemo(() => {
-    if (!fontScale) return 32;
+    const ptSize = settings.baseFontSize || fontScale?.fontSize || 42;
     // Use a base width of 800px for the conversion calculation
-    return ptToCssPreviewPx(fontScale.fontSize, 800);
-  }, [fontScale]);
+    return ptToCssPreviewPx(ptSize, 800);
+  }, [settings.baseFontSize, fontScale]);
 
   const refFontPx = useMemo(() => {
     return Math.max(11, mainFontPx * 0.65);
@@ -60,7 +60,7 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
   // Components for the individual slide core logic (reused for lyrics feeds)
   const SlideCard = ({ text, refText, isLyric = false }) => {
     // Dynamic lyrics sizing
-    const lyricFontSizePt = isLyric ? getLyricsFontSize(text) : fontScale?.fontSize || 32;
+    const lyricFontSizePt = isLyric ? (settings.baseFontSize || getLyricsFontSize(text)) : (settings.baseFontSize || fontScale?.fontSize || 42);
     const lyricFontSizePx = ptToCssPreviewPx(lyricFontSizePt, 800);
 
     return (
