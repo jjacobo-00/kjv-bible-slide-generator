@@ -64,6 +64,17 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
     const lyricFontSizePt = isLyric ? (settings.baseFontSize || getLyricsFontSize(text)) : (settings.baseFontSize || fontScale?.fontSize || 42);
     const lyricFontSizePx = ptToCssPreviewPx(lyricFontSizePt, 800);
 
+    // Layout-specific styling
+    const layout = settings.layout || 'center';
+    
+    // Position classes for the content container
+    const layoutClasses = {
+      center: 'items-center justify-center text-center',
+      top:    'items-center justify-start text-center pt-[10%]',
+      bottom: 'items-center justify-end text-center pb-[10%]',
+      left:   'items-start justify-center text-left pl-[10%] pr-[15%]'
+    }[layout] || 'items-center justify-center text-center';
+
     return (
       <div
         className="group relative shadow-2xl shadow-black/60 rounded-sm overflow-hidden ring-1 ring-white/10 w-full mb-8 last:mb-0 transition-transform duration-300 hover:scale-[1.01]"
@@ -81,12 +92,8 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
         )}
 
         {/* Content area */}
-        <div
-          className={`absolute inset-0 flex flex-col px-[8%] py-[8%] items-center ${
-            settings.layout === 'top' ? 'justify-start' : 'justify-center'
-          }`}
-        >
-          <div className="w-full text-center">
+        <div className={`absolute inset-0 flex flex-col p-[8%] ${layoutClasses}`}>
+          <div className="w-full">
             {/* The primary text */}
             <p
               className="leading-snug transition-all duration-300 font-bold whitespace-pre-wrap"
@@ -127,29 +134,28 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
 
         {/* Layout Position Toggles */}
         <div className="absolute top-4 right-4 flex gap-1.5 overflow-hidden rounded-lg bg-black/40 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 p-1 translate-y-1 group-hover:translate-y-0 translate-x-1 group-hover:translate-x-0">
-          <button 
-            onClick={(e) => { e.stopPropagation(); onSettingsChange('layout', 'center'); }}
-            className={`p-1.5 rounded-md transition-all ${settings.layout === 'center' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
-            title="Center Alignment"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 12h16M4 16h16" />
-            </svg>
-          </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onSettingsChange('layout', 'top'); }}
-            className={`p-1.5 rounded-md transition-all ${settings.layout === 'top' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
-            title="Top Alignment"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 5h16" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 10h12M4 15h8" />
-            </svg>
-          </button>
+          {[
+            { id: 'top', title: 'Top', path: <path d="M5 4h14M8 9l4-4 4 4M12 5v13" /> },
+            { id: 'center', title: 'Center', path: <path d="M4 8h16M4 12h16M4 16h16" /> },
+            { id: 'bottom', title: 'Bottom', path: <path d="M5 20h14M8 15l4 4 4-4M12 19V6" /> },
+            { id: 'left', title: 'Left', path: <path d="M4 5v14M9 8l-4 4 4 4M5 12h13" /> }
+          ].map(opt => (
+            <button 
+              key={opt.id}
+              onClick={(e) => { e.stopPropagation(); onSettingsChange('layout', opt.id); }}
+              className={`p-1.5 rounded-md transition-all ${settings.layout === opt.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+              title={`${opt.title} Alignment`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                {opt.path}
+              </svg>
+            </button>
+          ))}
         </div>
       </div>
     );
   };
+
 
   return (
     <div className="flex-1 flex flex-col items-center bg-[#0a0c14] p-8 overflow-y-auto min-h-0 custom-scrollbar">

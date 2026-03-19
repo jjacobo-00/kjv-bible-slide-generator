@@ -70,6 +70,11 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
         slide.background = { color: sanitizeHex(settings.bgColor) };
       }
 
+      // Determine alignment based on layout setting
+      const layout = settings.layout || 'center';
+      const valign = (layout === 'top') ? 'top' : (layout === 'bottom') ? 'bottom' : 'middle';
+      const align = (layout === 'left') ? 'left' : 'center';
+
       const padding = 0.5;
       slide.addText(
         [
@@ -77,7 +82,7 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
           { text: '', options: { breakLine: true } },
           { text: `— ${verseRef}`, options: { fontSize: Math.max(14, (settings.baseFontSize || fontSize) * 0.65), fontFace: settings.fontFamily, color: sanitizeHex(settings.fontColor), italic: true } },
         ],
-        { x: padding, y: padding, w: 13.33 - padding * 2, h: 7.5 - padding * 2, valign: settings.layout === 'top' ? 'top' : 'middle', align: 'center', wrap: true, fit: 'shrink' }
+        { x: padding, y: padding, w: 13.33 - padding * 2, h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
       );
     }
   } else {
@@ -93,10 +98,14 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
         slide.background = { color: sanitizeHex(settings.bgColor) };
       }
 
+      const layout = settings.layout || 'center';
+      const valign = (layout === 'top') ? 'top' : (layout === 'bottom') ? 'bottom' : 'middle';
+      const align = (layout === 'left') ? 'left' : 'center';
+
       const padding = 0.8;
       slide.addText(
         [{ text: line, options: { fontSize: settings.baseFontSize || fontSize, fontFace: "'Inter', Arial", color: sanitizeHex(settings.fontColor), bold: true } }],
-        { x: padding, y: padding, w: 13.33 - padding * 2, h: 7.5 - padding * 2, valign: 'middle', align: 'center', wrap: true, fit: 'shrink' }
+        { x: padding, y: padding, w: 13.33 - padding * 2, h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
       );
     }
     firstValidRef = "Lyrics";

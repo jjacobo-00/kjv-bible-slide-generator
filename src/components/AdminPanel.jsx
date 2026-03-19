@@ -615,40 +615,27 @@ export default function AdminPanel({
         {/* ── Layout ── */}
         <section>
           <SectionLabel>Slide Layout</SectionLabel>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {[
-              { value: 'center', label: 'Centered', icon: '⬛' },
-              { value: 'top', label: 'Top Aligned', icon: '⬛' },
-            ].map(({ value, label, icon }) => (
+              { id: 'center', label: 'Center', icon: <path d="M12 3v18M3 12h18" strokeDasharray="2 2"/> },
+              { id: 'top', label: 'Top', icon: <path d="M5 4h14M8 9l4-4 4 4M12 5v13" /> },
+              { id: 'bottom', label: 'Bottom', icon: <path d="M5 20h14M8 15l4 4 4-4M12 19V6" /> },
+              { id: 'left', label: 'Left', icon: <path d="M4 5v14M9 8l-4 4 4 4M5 12h13" /> }
+            ].map((l) => (
               <button
-                key={value}
-                onClick={() => onSettingsChange('layout', value)}
-                className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg border text-xs font-medium transition-all ${
-                  settings.layout === value
-                    ? 'border-indigo-500 bg-indigo-900/40 text-indigo-300'
-                    : 'border-slate-600 bg-slate-800/50 text-slate-400 hover:border-slate-500 hover:text-slate-300'
+                key={l.id}
+                onClick={() => onSettingsChange('layout', l.id)}
+                className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${
+                  (settings.layout || 'center') === l.id
+                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20 scale-105'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-300'
                 }`}
+                title={l.label}
               >
-                {/* Mini slide viz */}
-                <div className="w-full aspect-video bg-slate-700 rounded-sm flex flex-col p-1 gap-0.5">
-                  {value === 'center' ? (
-                    <>
-                      <div className="flex-1" />
-                      <div className="h-px bg-slate-400 mx-1" />
-                      <div className="h-px bg-slate-400 mx-2" />
-                      <div className="h-px bg-slate-400 mx-3" />
-                      <div className="flex-1" />
-                    </>
-                  ) : (
-                    <>
-                      <div className="h-px bg-slate-400 mx-1" />
-                      <div className="h-px bg-slate-400 mx-2" />
-                      <div className="h-px bg-slate-400 mx-3" />
-                      <div className="flex-1" />
-                    </>
-                  )}
-                </div>
-                {label}
+                <svg className="w-5 h-5 mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  {l.icon}
+                </svg>
+                <span className="text-[9px] uppercase font-black tracking-tight">{l.label}</span>
               </button>
             ))}
           </div>
