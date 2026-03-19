@@ -615,12 +615,10 @@ export default function AdminPanel({
         {/* ── Layout ── */}
         <section>
           <SectionLabel>Slide Layout</SectionLabel>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {[
-              { id: 'center', label: 'Center', icon: <path d="M12 3v18M3 12h18" strokeDasharray="2 2"/> },
-              { id: 'top', label: 'Top Left', icon: <path d="M5 4h14M8 9l4-4 4 4M12 5v13" /> },
-              { id: 'bottom', label: 'Bottom Left', icon: <path d="M5 20h14M8 15l4 4 4-4M12 19V6" /> },
-              { id: 'left', label: 'Left', icon: <path d="M4 5v14M9 8l-4 4 4 4M5 12h13" /> }
+              { id: 'center', label: 'Centered', icon: <path d="M12 3v18M3 12h18" strokeDasharray="2 2"/> },
+              { id: 'left', label: 'Left Aligned', icon: <path d="M4 5v14M9 8l-4 4 4 4M5 12h13" /> }
             ].map((l) => (
               <button
                 key={l.id}

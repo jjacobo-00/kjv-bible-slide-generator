@@ -72,8 +72,8 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
 
       // Determine alignment based on layout setting
       const layout = settings.layout || 'center';
-      const valign = (layout === 'top') ? 'top' : (layout === 'bottom') ? 'bottom' : 'middle';
-      const align = (layout === 'left' || layout === 'top' || layout === 'bottom') ? 'left' : 'center';
+      const valign = 'middle';
+      const align = (layout === 'left') ? 'left' : 'center';
 
       const padding = 0.5;
       slide.addText(
@@ -82,7 +82,7 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
           { text: '', options: { breakLine: true } },
           { text: `— ${verseRef}`, options: { fontSize: Math.max(14, (settings.baseFontSize || fontSize) * 0.65), fontFace: settings.fontFamily, color: sanitizeHex(settings.fontColor), italic: true } },
         ],
-        { x: padding + 0.5, y: padding, w: 13.33 - padding * 2 - 1.0, h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
+        { x: padding + (align === 'left' ? 0.5 : 0), y: padding, w: 13.33 - padding * 2 - (align === 'left' ? 1.0 : 0), h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
       );
     }
   } else {
@@ -99,13 +99,13 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
       }
 
       const layout = settings.layout || 'center';
-      const valign = (layout === 'top') ? 'top' : (layout === 'bottom') ? 'bottom' : 'middle';
-      const align = (layout === 'left' || layout === 'top' || layout === 'bottom') ? 'left' : 'center';
+      const valign = 'middle';
+      const align = (layout === 'left') ? 'left' : 'center';
 
       const padding = 0.8;
       slide.addText(
         [{ text: line, options: { fontSize: settings.baseFontSize || fontSize, fontFace: "'Inter', Arial", color: sanitizeHex(settings.fontColor), bold: true } }],
-        { x: padding + 0.5, y: padding, w: 13.33 - padding * 2 - 1.0, h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
+        { x: padding + (align === 'left' ? 0.5 : 0), y: padding, w: 13.33 - padding * 2 - (align === 'left' ? 1.0 : 0), h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
       );
     }
     firstValidRef = "Lyrics";
