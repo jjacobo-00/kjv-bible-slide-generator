@@ -141,6 +141,54 @@ export default function SlidePreview({
     }
   }, [activeSlideId, appMode]);
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't navigate if the user is typing in an input or textarea
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        if (appMode === 'bible') {
+          const idx = slides.findIndex(s => s.id === activeSlideId);
+          if (idx < slides.length - 1) {
+            onSetActiveSlide(slides[idx + 1].id);
+          }
+        } else if (appMode === 'lyrics' && lyricsSlides.length > 1) {
+          const nextIdx = Math.min(currentSlideIndex + 1, lyricsSlides.length - 1);
+          if (nextIdx !== currentSlideIndex) {
+            const nextSlideId = `lyrics-${nextIdx}`;
+            // For lyrics, we rely on scroll position mostly, but we can search for a ref
+            // Actually, lyrics don't have IDs. I'll just scroll to the next slide element.
+            const container = containerRef.current;
+            if (container) {
+              const slideHeight = container.scrollHeight / lyricsSlides.length;
+              container.scrollTo({ top: (currentSlideIndex + 1) * slideHeight, behavior: 'smooth' });
+            }
+          }
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        if (appMode === 'bible') {
+          const idx = slides.findIndex(s => s.id === activeSlideId);
+          if (idx > 0) {
+            onSetActiveSlide(slides[idx - 1].id);
+          }
+        } else if (appMode === 'lyrics' && lyricsSlides.length > 1) {
+          const prevIdx = Math.max(currentSlideIndex - 1, 0);
+          if (prevIdx !== currentSlideIndex) {
+            const container = containerRef.current;
+            if (container) {
+               const slideHeight = container.scrollHeight / lyricsSlides.length;
+               container.scrollTo({ top: (currentSlideIndex - 1) * slideHeight, behavior: 'smooth' });
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [appMode, activeSlideId, slides, onSetActiveSlide, lyricsSlides.length, currentSlideIndex]);
+
   // Track the current visible slide
   const handleScroll = (e) => {
     if (!containerRef.current) return;
