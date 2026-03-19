@@ -98,6 +98,7 @@ export default function AdminPanel({
   lyricsRawText,
   onLyricsChange,
   lyricsSlides,
+  onReorderSlide,
 }) {
   const verseState = activeSlide.verseState;
   const verseQuery = activeSlide.verseQuery;
@@ -106,6 +107,7 @@ export default function AdminPanel({
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  const [isReordering, setIsReordering] = useState(false);
 
   const fetchSuggestions = async (q) => {
     if (!q.trim()) {
@@ -197,7 +199,19 @@ export default function AdminPanel({
             {/* ── Slides Manager ── */}
             <section>
               <div className="flex items-center justify-between mb-2">
-                <SectionLabel>Slides</SectionLabel>
+                <div className="flex items-center gap-2">
+                  <SectionLabel>Slides</SectionLabel>
+                  <button
+                    onClick={() => setIsReordering(!isReordering)}
+                    className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded transition-all ${
+                      isReordering 
+                        ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' 
+                        : 'bg-slate-800 text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    {isReordering ? 'Done' : 'Edit'}
+                  </button>
+                </div>
                 <button
                    onClick={onAddSlide}
                    className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
@@ -213,19 +227,41 @@ export default function AdminPanel({
                 {slides.map((s, index) => (
                   <div 
                     key={s.id} 
-                    className={`flex items-center h-8 rounded border shrink-0 transition-colors overflow-hidden ${
+                    className={`flex items-center h-8 rounded border shrink-0 transition-all overflow-hidden ${
                       activeSlideId === s.id
-                        ? 'border-indigo-500 bg-indigo-900/40 text-white'
+                        ? 'border-indigo-500 bg-indigo-900/40 text-white ring-1 ring-indigo-500/30'
                         : 'border-slate-600 bg-slate-800 text-slate-400 hover:border-slate-500'
                     }`}
                   >
+                    {isReordering && index > 0 && (
+                      <button
+                        onClick={() => onReorderSlide(s.id, -1)}
+                        className="flex items-center justify-center h-full px-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors border-r border-slate-700/50"
+                        title="Move left"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       onClick={() => onSetActiveSlide(s.id)}
                       className={`flex items-center justify-center h-full text-xs font-semibold px-4 hover:text-white transition-colors outline-none`}
                     >
                       {index + 1}
                     </button>
-                    {slides.length > 1 && (
+                    {isReordering && index < slides.length - 1 && (
+                      <button
+                        onClick={() => onReorderSlide(s.id, 1)}
+                        className="flex items-center justify-center h-full px-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors border-l border-slate-700/50"
+                        title="Move right"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
+                    {!isReordering && slides.length > 1 && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onRemoveSlide(s.id); }}
                         className="flex items-center justify-center h-full px-2 bg-black/20 hover:bg-red-500/20 hover:text-red-400 text-slate-500 transition-colors outline-none"

@@ -125,6 +125,20 @@ export default function App() {
     });
   };
 
+  const handleReorderSlide = (id, direction) => {
+    setSlides((prev) => {
+      const idx = prev.findIndex((s) => s.id === id);
+      if (idx === -1) return prev;
+      const newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+
+      const newSlides = [...prev];
+      const [moved] = newSlides.splice(idx, 1);
+      newSlides.splice(newIdx, 0, moved);
+      return newSlides;
+    });
+  };
+
   // Compute font scale info reactively whenever the active slide's verse changes
   const fontScale = useMemo(() => {
     if (appMode === 'lyrics') return null; // Lyrics handled differently
@@ -149,6 +163,7 @@ export default function App() {
         onSetActiveSlide={setActiveSlideId}
         onAddSlide={handleAddSlide}
         onRemoveSlide={handleRemoveSlide}
+        onReorderSlide={handleReorderSlide}
         onSettingsChange={handleSettingsChange}
         onVerseQueryChange={handleVerseQueryChange}
         onFetchVerse={handleFetchVerse}
