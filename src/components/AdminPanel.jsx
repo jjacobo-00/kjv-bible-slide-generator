@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { generateAndDownloadPptx } from '../utils/pptxGenerator.js';
 import { getAutocompleteSuggestions } from '../utils/bibleApi.js';
+import cbtLogo from '../assets/CBT Logo.svg';
 
 // ── Font Options ──────────────────────────────────────────────────────────────
 const FONT_OPTIONS = [
@@ -150,13 +151,16 @@ export default function AdminPanel({
 
   return (
     <aside className="w-80 min-w-[280px] flex-shrink-0 bg-slate-900 border-r border-slate-700/50 flex flex-col h-screen overflow-y-auto shadow-2xl">
-      <div className="px-5 py-5 border-b border-slate-700/60 bg-gradient-to-r from-indigo-900/40 to-slate-900">
-        <div className="flex items-center gap-2.5 mb-0.5">
-          <h1 className="text-lg font-bold text-white tracking-tight leading-tight">
-            CBT KJV Bible &<br/>Lyrics Generator
-          </h1>
+      <div className="px-5 py-5 border-b border-slate-700/60 bg-gradient-to-r from-indigo-900/40 to-slate-900 flex items-start gap-3">
+        <img src={cbtLogo} alt="CBT Logo" className="w-10 h-10 object-contain mt-1" />
+        <div>
+          <div className="flex items-center gap-2.5 mb-0.5">
+            <h1 className="text-lg font-bold text-white tracking-tight leading-tight">
+              CBT KJV Bible &<br/>Lyrics Generator
+            </h1>
+          </div>
+          <p className="text-xs text-slate-400">PowerPoint Export</p>
         </div>
-        <p className="text-xs text-slate-400">PowerPoint Export</p>
       </div>
 
       <div className="px-5 py-3 flex border-b border-slate-700/50">
