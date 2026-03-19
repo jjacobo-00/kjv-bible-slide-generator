@@ -163,7 +163,7 @@ export default function App() {
         onSetActiveSlide={setActiveSlideId}
         onAddSlide={handleAddSlide}
         onRemoveSlide={handleRemoveSlide}
-        onReorderSlide={handleReorderSlide}
+        onReorderSave={setSlides}
         onSettingsChange={handleSettingsChange}
         onVerseQueryChange={handleVerseQueryChange}
         onFetchVerse={handleFetchVerse}

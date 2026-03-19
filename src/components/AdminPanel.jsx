@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { generateAndDownloadPptx } from '../utils/pptxGenerator.js';
 import { getAutocompleteSuggestions } from '../utils/bibleApi.js';
+import SlideOrganizerModal from './SlideOrganizerModal';
 import cbtLogo from '../assets/CBT Logo.svg';
 
 // ── Font Options ──────────────────────────────────────────────────────────────
@@ -98,7 +99,7 @@ export default function AdminPanel({
   lyricsRawText,
   onLyricsChange,
   lyricsSlides,
-  onReorderSlide,
+  onReorderSave,
 }) {
   const verseState = activeSlide.verseState;
   const verseQuery = activeSlide.verseQuery;
@@ -233,35 +234,13 @@ export default function AdminPanel({
                         : 'border-slate-600 bg-slate-800 text-slate-400 hover:border-slate-500'
                     }`}
                   >
-                    {isReordering && index > 0 && (
-                      <button
-                        onClick={() => onReorderSlide(s.id, -1)}
-                        className="flex items-center justify-center h-full px-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors border-r border-slate-700/50"
-                        title="Move left"
-                      >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                    )}
                     <button
                       onClick={() => onSetActiveSlide(s.id)}
                       className={`flex items-center justify-center h-full text-xs font-semibold px-4 hover:text-white transition-colors outline-none`}
                     >
                       {index + 1}
                     </button>
-                    {isReordering && index < slides.length - 1 && (
-                      <button
-                        onClick={() => onReorderSlide(s.id, 1)}
-                        className="flex items-center justify-center h-full px-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors border-l border-slate-700/50"
-                        title="Move right"
-                      >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    )}
-                    {!isReordering && slides.length > 1 && (
+                    {slides.length > 1 && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onRemoveSlide(s.id); }}
                         className="flex items-center justify-center h-full px-2 bg-black/20 hover:bg-red-500/20 hover:text-red-400 text-slate-500 transition-colors outline-none"
@@ -277,6 +256,18 @@ export default function AdminPanel({
               </div>
             </section>
 
+            {/* Slide Organizer Modal */}
+            {isReordering && (
+              <SlideOrganizerModal 
+                slides={slides} 
+                onClose={() => setIsReordering(false)}
+                onSave={(newSlides) => {
+                  onReorderSave(newSlides);
+                  setIsReordering(false);
+                }}
+              />
+            )}
+            
             <div className="border-t border-slate-700/50" />
 
             {/* ── Verse Lookup ── */}
