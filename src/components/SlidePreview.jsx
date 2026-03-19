@@ -60,12 +60,14 @@ export default function SlidePreview({
   }, [settings.bgColor, settings.bgImageUrl]);
 
   // Components for the individual slide core logic
-  const SlideCard = ({ text, refText, isLyric = false }) => {
+  const SlideCard = ({ text, refText, isLyric = false, type = 'lyrics' }) => {
+    const isTitle = type === 'title';
     const lyricFontSizePt = isLyric ? (settings.baseFontSize || getLyricsFontSize(text)) : (settings.baseFontSize || fontScale?.fontSize || 42);
     const lyricFontSizePx = ptToCssPreviewPx(lyricFontSizePt, 800);
     const layout = settings.layout || 'center';
     
-    const layoutClasses = {
+    // Title slides always center
+    const layoutClasses = isTitle ? 'items-center justify-center text-center' : {
       center: 'items-center justify-center text-center',
       left:   'items-start justify-center text-left pl-[10%] pr-[15%]'
     }[layout] || 'items-center justify-center text-center';
@@ -83,9 +85,9 @@ export default function SlidePreview({
               className="transition-all duration-300 font-bold whitespace-pre-wrap tracking-tight"
               style={{
                 fontFamily: isLyric ? "'Montserrat', 'Inter', sans-serif" : settings.fontFamily,
-                fontSize: `${isLyric ? lyricFontSizePx : mainFontPx}px`,
+                fontSize: `${isTitle ? lyricFontSizePx * 1.5 : (isLyric ? lyricFontSizePx : mainFontPx)}px`,
                 color: settings.fontColor,
-                lineHeight: 1.4,
+                lineHeight: isTitle ? 1.2 : 1.4,
                 textShadow: '0 4px 12px rgba(0,0,0,0.7)',
               }}
             >
@@ -93,17 +95,17 @@ export default function SlidePreview({
             </p>
             {refText && (
               <p
-                className="mt-8 transition-all duration-300"
+                className={`transition-all duration-300 ${isTitle ? 'mt-8 text-xl opacity-80' : 'mt-8'}`}
                 style={{
                   fontFamily: settings.fontFamily,
-                  fontSize: `${refFontPx}px`,
+                  fontSize: `${isTitle ? refFontPx * 1.5 : refFontPx}px`,
                   color: settings.fontColor,
                   fontStyle: 'italic',
                   opacity: 0.8,
                   textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                 }}
               >
-                — {refText}
+                {isTitle ? `— ${refText} —` : `— ${refText}`}
               </p>
             )}
           </div>
@@ -271,9 +273,9 @@ export default function SlidePreview({
             )
           ) : (
             hasLyrics ? (
-              lyricsSlides.map((line, idx) => (
-                <div key={`${idx}-${line}`} className="w-full flex justify-center snap-center">
-                  <SlideCard text={line} isLyric={true} />
+              lyricsSlides.map((s, idx) => (
+                <div key={`${idx}-${s.text}`} className="w-full flex justify-center snap-center">
+                  <SlideCard text={s.text} refText={s.refText} isLyric={true} type={s.type} />
                 </div>
               ))
             ) : (

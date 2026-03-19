@@ -87,8 +87,11 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
     }
   } else {
     // Lyrics Mode
-    for (const line of lyricsSlides) {
-      const fontSize = getLyricsFontSize(line);
+    for (const slideData of lyricsSlides) {
+      const { text, refText, type } = slideData;
+      const isTitle = type === 'title';
+      
+      const fontSize = getLyricsFontSize(text);
       const slide = pres.addSlide();
 
       // Background
@@ -100,15 +103,46 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
 
       const layout = settings.layout || 'center';
       const valign = 'middle';
-      const align = (layout === 'left') ? 'left' : 'center';
+      const align = isTitle ? 'center' : ((layout === 'left') ? 'left' : 'center');
 
       const padding = 0.8;
-      slide.addText(
-        [{ text: line, options: { fontSize: settings.baseFontSize || fontSize, fontFace: "'Inter', Arial", color: sanitizeHex(settings.fontColor), bold: true } }],
-        { x: padding + (align === 'left' ? 0.5 : 0), y: padding, w: 13.33 - padding * 2 - (align === 'left' ? 1.0 : 0), h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
-      );
+      const mainLines = [
+        { 
+          text: text, 
+          options: { 
+            fontSize: isTitle ? (settings.baseFontSize || fontSize) * 1.5 : (settings.baseFontSize || fontSize), 
+            fontFace: isTitle ? settings.fontFamily : "'Montserrat', Arial", 
+            color: sanitizeHex(settings.fontColor), 
+            bold: true 
+          } 
+        }
+      ];
+
+      if (refText) {
+        mainLines.push({ text: '\n', options: {} });
+        mainLines.push({ 
+          text: isTitle ? `— ${refText} —` : `— ${refText}`, 
+          options: { 
+            fontSize: isTitle ? 24 : 18, 
+            fontFace: settings.fontFamily, 
+            color: sanitizeHex(settings.fontColor),
+            italic: true 
+          } 
+        });
+      }
+
+      slide.addText(mainLines, { 
+        x: padding + (align === 'left' ? 0.5 : 0), 
+        y: padding, 
+        w: 13.33 - padding * 2 - (align === 'left' ? 1.0 : 0), 
+        h: 7.5 - padding * 2, 
+        valign, 
+        align, 
+        wrap: true, 
+        fit: 'shrink' 
+      });
     }
-    firstValidRef = "Lyrics";
+    firstValidRef = settings.songTitle || "Lyrics";
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
@@ -121,7 +155,10 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
       : 'Verse';
     fileName = `${baseName}_Bible_Slide_${dateStr}.pptx`;
   } else {
-    fileName = `Song_Lyrics_${dateStr}.pptx`;
+    const baseName = firstValidRef 
+      ? firstValidRef.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')
+      : 'Song';
+    fileName = `${baseName}_Lyrics_${dateStr}.pptx`;
   }
   
   await pres.writeFile({ fileName });
