@@ -70,8 +70,8 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
     // Position classes for the content container
     const layoutClasses = {
       center: 'items-center justify-center text-center',
-      top:    'items-center justify-start text-center pt-[10%]',
-      bottom: 'items-center justify-end text-center pb-[10%]',
+      top:    'items-start justify-start text-left pt-[8%] pl-[10%] pr-[10%]',
+      bottom: 'items-start justify-end text-left pb-[8%] pl-[10%] pr-[10%]',
       left:   'items-start justify-center text-left pl-[10%] pr-[15%]'
     }[layout] || 'items-center justify-center text-center';
 

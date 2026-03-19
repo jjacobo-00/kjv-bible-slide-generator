@@ -224,7 +224,7 @@ export default function AdminPanel({
                   Add
                 </button>
               </div>
-              <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar transition-all">
+              <div className="flex gap-4 overflow-x-auto pb-6 pt-2 px-2 custom-scrollbar transition-all">
                 {slides.map((s, index) => {
                   const parts = s.verseState.verseRef?.split(' ') || [];
                   const book = parts.slice(0, -1).join(' ');
@@ -618,8 +618,8 @@ export default function AdminPanel({
           <div className="grid grid-cols-4 gap-2">
             {[
               { id: 'center', label: 'Center', icon: <path d="M12 3v18M3 12h18" strokeDasharray="2 2"/> },
-              { id: 'top', label: 'Top', icon: <path d="M5 4h14M8 9l4-4 4 4M12 5v13" /> },
-              { id: 'bottom', label: 'Bottom', icon: <path d="M5 20h14M8 15l4 4 4-4M12 19V6" /> },
+              { id: 'top', label: 'Top Left', icon: <path d="M5 4h14M8 9l4-4 4 4M12 5v13" /> },
+              { id: 'bottom', label: 'Bottom Left', icon: <path d="M5 20h14M8 15l4 4 4-4M12 19V6" /> },
               { id: 'left', label: 'Left', icon: <path d="M4 5v14M9 8l-4 4 4 4M5 12h13" /> }
             ].map((l) => (
               <button
