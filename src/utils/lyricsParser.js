@@ -3,49 +3,68 @@
  * Parses raw lyric text into an array of clean, individual slide strings.
  */
 
-export function parseLyrics(rawText, linesPerSlide = 2) {
+export function parseLyrics(rawText, linesPerSlide = 2, settings = {}) {
   if (!rawText) return [];
 
-  // 1. Split into lines first to handle line-by-line structural labels
   const rawLines = rawText.split(/\r?\n/);
-  
-  const cleanLines = rawLines
-    .map(line => line.trim())
-    .filter(line => {
-      if (!line) return false;
-      
-      // Remove common "internet noise" labels even without brackets
-      // regex to match lines that are JUST a label like "Verse 1", "Chorus", "Bridge", etc.
-      // Also catches things like "Verse 1:", "Chorus - 1", etc.
-      const isStructuralLabel = /^(verse|chorus|bridge|outro|intro|tag|hook|interlude|refrain|pre-chorus|prechorus|split)(\s*[.\-#\d]+)?(\s*:)?$/gi.test(line);
-      if (isStructuralLabel) return false;
+  const slides = [];
+  let currentGroup = [];
+  let isInChorus = false;
 
-      // Filter out lines that are just a single short word ending in a colon (almost certainly a label)
-      if (line.endsWith(':') && line.split(' ').length <= 2) return false;
-
-      // Remove lines that are just bracketed or parenthesized noise
-      if (/^\[.*?\]$/g.test(line) || /^\(.*?\)$/g.test(line)) return false;
-
-      // Filter out repeat instructions
-      if (/repeat|x\s*\d+|\d+\s*x/gi.test(line) && line.length < 15) return false;
-
-      return true;
-    })
-    .map(line => {
-      // Inline cleaning for remaining brackets/parentheses within a line of lyrics
-      return line.replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').trim();
-    })
-    .filter(line => line.length > 0);
-
-  // 2. Grouping: Instead of 1 line per slide, group by linesPerSlide
-  const groupedSlides = [];
   const count = parseInt(linesPerSlide, 10) || 2;
-  for (let i = 0; i < cleanLines.length; i += count) {
-    const group = cleanLines.slice(i, i + count);
-    groupedSlides.push(group.join('\n'));
+
+  // 1. Add Title Slide if exists
+  if (settings.songTitle || settings.songAuthor) {
+    slides.push({
+      type: 'title',
+      text: settings.songTitle || 'Untitled',
+      refText: settings.songAuthor || '',
+      isChorus: false
+    });
   }
 
-  return groupedSlides;
+  for (let line of rawLines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Check for structural labels (Chorus, Verse, etc.)
+    const chorusMatch = /^(chorus|refrain)/gi.test(trimmed) || /^\[chorus\]/gi.test(trimmed);
+    const otherLabelMatch = /^(verse|bridge|outro|intro|tag|hook|interlude|pre-chorus|prechorus|split)/gi.test(trimmed) || /^\[.*?\]/gi.test(trimmed);
+
+    if (chorusMatch) {
+      // Flush current group if we switch to chorus
+      if (currentGroup.length > 0) {
+        slides.push({ type: 'lyrics', text: currentGroup.join('\n'), isChorus: isInChorus });
+        currentGroup = [];
+      }
+      isInChorus = true;
+      continue;
+    }
+
+    if (otherLabelMatch) {
+      // Flush current group if we switch section
+      if (currentGroup.length > 0) {
+        slides.push({ type: 'lyrics', text: currentGroup.join('\n'), isChorus: isInChorus });
+        currentGroup = [];
+      }
+      isInChorus = false;
+      continue;
+    }
+
+    currentGroup.push(trimmed);
+
+    if (currentGroup.length >= count) {
+      slides.push({ type: 'lyrics', text: currentGroup.join('\n'), isChorus: isInChorus });
+      currentGroup = [];
+    }
+  }
+
+  // Flush remaining
+  if (currentGroup.length > 0) {
+    slides.push({ type: 'lyrics', text: currentGroup.join('\n'), isChorus: isInChorus });
+  }
+
+  return slides;
 }
 
 /**

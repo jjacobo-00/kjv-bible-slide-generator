@@ -19,7 +19,14 @@ const DEFAULT_SETTINGS = {
   fontColor: '#F8F1E0',
   layout: 'center', // 'center' | 'top'
   lyricsLinesPerSlide: 2,
-  baseFontSize: 42, // base size for dynamic font scaling
+  baseFontSize: 42,
+  songTitle: '',
+  songAuthor: '',
+  highlightChorus: true,
+  lyricsBgColor: '#0f172a',
+  lyricsBgImageUrl: '',
+  chorusBgColor: '#1e1b4b', // Indigo 950
+  chorusBgImageUrl: '',
 };
 
 const createNewSlide = (id) => ({
@@ -148,8 +155,12 @@ export default function App() {
   }, [activeSlide.verseState.verseText, activeSlide.verseState.verseRef, appMode]);
 
   const parsedLyrics = useMemo(() => {
-    return parseLyrics(lyricsRawText, settings.lyricsLinesPerSlide);
-  }, [lyricsRawText, settings.lyricsLinesPerSlide]);
+    return parseLyrics(lyricsRawText, settings.lyricsLinesPerSlide, {
+      songTitle: settings.songTitle,
+      songAuthor: settings.songAuthor,
+      highlightChorus: settings.highlightChorus
+    });
+  }, [lyricsRawText, settings.lyricsLinesPerSlide, settings.songTitle, settings.songAuthor, settings.highlightChorus]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0a0c14]">

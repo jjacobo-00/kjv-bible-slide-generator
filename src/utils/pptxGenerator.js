@@ -87,28 +87,70 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
     }
   } else {
     // Lyrics Mode
-    for (const line of lyricsSlides) {
-      const fontSize = getLyricsFontSize(line);
+    for (const slideData of lyricsSlides) {
+      const { text, refText, isChorus, type } = slideData;
+      const isIntro = type === 'title';
+      
+      const fontSize = getLyricsFontSize(text);
       const slide = pres.addSlide();
 
-      // Background
-      if (settings.bgImageUrl && settings.bgImageUrl.trim().length > 0) {
-        try { slide.background = { path: settings.bgImageUrl.trim() }; } catch { slide.background = { color: sanitizeHex(settings.bgColor) }; }
+      // Determine the background for THIS slide
+      const bgUrl = (isChorus && settings.chorusBgImageUrl) 
+        ? settings.chorusBgImageUrl 
+        : (settings.lyricsBgImageUrl || settings.bgImageUrl);
+      const bgColor = (isChorus && settings.chorusBgColor) 
+        ? settings.chorusBgColor 
+        : (settings.lyricsBgColor || settings.bgColor);
+
+      if (bgUrl && bgUrl.trim().length > 0) {
+        try { slide.background = { path: bgUrl.trim() }; } catch { slide.background = { color: sanitizeHex(bgColor) }; }
       } else {
-        slide.background = { color: sanitizeHex(settings.bgColor) };
+        slide.background = { color: sanitizeHex(bgColor) };
       }
 
-      const layout = settings.layout || 'center';
+      const layout = (appMode === 'bible' && settings.layout) || 'center';
       const valign = 'middle';
-      const align = (layout === 'left') ? 'left' : 'center';
+      const align = (layout === 'left' && !isIntro) ? 'left' : 'center';
 
       const padding = 0.8;
-      slide.addText(
-        [{ text: line, options: { fontSize: settings.baseFontSize || fontSize, fontFace: "'Inter', Arial", color: sanitizeHex(settings.fontColor), bold: true } }],
-        { x: padding + (align === 'left' ? 0.5 : 0), y: padding, w: 13.33 - padding * 2 - (align === 'left' ? 1.0 : 0), h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
-      );
+      const mainLines = [
+        { 
+          text: text, 
+          options: { 
+            fontSize: isIntro ? (settings.baseFontSize || fontSize) * 1.5 : (settings.baseFontSize || fontSize), 
+            fontFace: isIntro ? settings.fontFamily : "'Montserrat', Arial", 
+            color: sanitizeHex(settings.fontColor), 
+            bold: true,
+            italic: isChorus && settings.highlightChorus
+          } 
+        }
+      ];
+
+      if (refText) {
+        mainLines.push({ text: '\n', options: {} });
+        mainLines.push({ 
+          text: isIntro ? `— ${refText} —` : `— ${refText}`, 
+          options: { 
+            fontSize: isIntro ? 24 : 18, 
+            fontFace: settings.fontFamily, 
+            color: sanitizeHex(settings.fontColor),
+            italic: !isIntro
+          } 
+        });
+      }
+
+      slide.addText(mainLines, { 
+        x: padding + (align === 'left' ? 0.5 : 0), 
+        y: padding, 
+        w: 13.33 - padding * 2 - (align === 'left' ? 1.0 : 0), 
+        h: 7.5 - padding * 2, 
+        valign, 
+        align, 
+        wrap: true, 
+        fit: 'shrink' 
+      });
     }
-    firstValidRef = "Lyrics";
+    firstValidRef = settings.songTitle || "Lyrics";
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
