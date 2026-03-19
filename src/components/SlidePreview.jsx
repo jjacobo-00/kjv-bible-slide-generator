@@ -46,72 +46,46 @@ export default function SlidePreview({
     return Math.max(11, mainFontPx * 0.65);
   }, [mainFontPx]);
 
+  // Determine the background CSS
+  const backgroundStyle = useMemo(() => {
+    if (settings.bgImageUrl && settings.bgImageUrl.trim()) {
+      return {
+        backgroundImage: `url(${settings.bgImageUrl.trim()})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundColor: settings.bgColor,
+      };
+    }
+    return { backgroundColor: settings.bgColor };
+  }, [settings.bgColor, settings.bgImageUrl]);
+
   // Components for the individual slide core logic
-  const SlideCard = ({ text, refText, isLyric = false, isChorus = false, type = 'lyrics' }) => {
-    const isHighlightChorus = isLyric && isChorus && settings.highlightChorus;
-
-    // Determine the background for THIS slide
-    const slideBackground = (() => {
-      const isLyrics = appMode === 'lyrics';
-      const bgUrl = (isLyrics && isChorus && settings.chorusBgImageUrl) 
-        ? settings.chorusBgImageUrl 
-        : (isLyrics ? settings.lyricsBgImageUrl : settings.bgImageUrl);
-      const bgColor = (isLyrics && isChorus && settings.chorusBgColor) 
-        ? settings.chorusBgColor 
-        : (isLyrics ? settings.lyricsBgColor : settings.bgColor);
-
-      if (bgUrl && bgUrl.trim()) {
-        return {
-          backgroundImage: `url(${bgUrl.trim()})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundColor: bgColor,
-        };
-      }
-      return { backgroundColor: bgColor };
-    })();
-
+  const SlideCard = ({ text, refText, isLyric = false }) => {
     const lyricFontSizePt = isLyric ? (settings.baseFontSize || getLyricsFontSize(text)) : (settings.baseFontSize || fontScale?.fontSize || 42);
     const lyricFontSizePx = ptToCssPreviewPx(lyricFontSizePt, 800);
-    const layout = (appMode === 'bible' && settings.layout) || 'center';
+    const layout = settings.layout || 'center';
     
-    // Title slides always center
-    const layoutClasses = type === 'title' ? 'items-center justify-center text-center' : {
+    const layoutClasses = {
       center: 'items-center justify-center text-center',
       left:   'items-start justify-center text-left pl-[10%] pr-[15%]'
     }[layout] || 'items-center justify-center text-center';
-
 
     return (
       <div
         className="group relative shadow-2xl shadow-black/80 rounded-sm overflow-hidden ring-1 ring-white/10 w-full transition-transform duration-500 hover:scale-[1.01] shrink-0"
         style={{ aspectRatio: '16 / 9', maxWidth: '1000px' }}
       >
-        <div className="absolute inset-0 transition-colors duration-300" style={slideBackground} />
-        {(settings.bgImageUrl?.trim() || (appMode === 'lyrics' && settings.lyricsBgImageUrl?.trim())) && (
-          <div className={`absolute inset-0 transition-colors duration-500 ${isHighlightChorus ? 'bg-indigo-900/30' : 'bg-black/40'}`} />
-        )}
-        
-        {/* Chorus Glow Effect */}
-        {isHighlightChorus && (
-          <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/10 to-transparent pointer-events-none" />
-        )}
-
+        <div className="absolute inset-0 transition-colors duration-300" style={backgroundStyle} />
+        {settings.bgImageUrl?.trim() && <div className="absolute inset-0 bg-black/40" />}
         <div className={`absolute inset-0 flex flex-col p-[8%] ${layoutClasses}`}>
-          <div className="w-[85%] mx-auto relative z-10">
-            {isHighlightChorus && (
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded-full backdrop-blur-sm animate-pulse">
-                <span className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.3em]">Chorus</span>
-              </div>
-            )}
-
+          <div className="w-[85%] mx-auto">
             <p
-              className={`transition-all duration-300 font-bold whitespace-pre-wrap tracking-tight ${isHighlightChorus ? 'italic' : ''}`}
+              className="transition-all duration-300 font-bold whitespace-pre-wrap tracking-tight"
               style={{
                 fontFamily: isLyric ? "'Montserrat', 'Inter', sans-serif" : settings.fontFamily,
-                fontSize: `${type === 'title' ? lyricFontSizePx * 1.5 : (isLyric ? lyricFontSizePx : mainFontPx)}px`,
+                fontSize: `${isLyric ? lyricFontSizePx : mainFontPx}px`,
                 color: settings.fontColor,
-                lineHeight: type === 'title' ? 1.2 : 1.4,
+                lineHeight: 1.4,
                 textShadow: '0 4px 12px rgba(0,0,0,0.7)',
               }}
             >
@@ -119,19 +93,17 @@ export default function SlidePreview({
             </p>
             {refText && (
               <p
-                className={`transition-all duration-300 ${type === 'title' ? 'mt-12 opacity-80' : 'mt-8'}`}
+                className="mt-8 transition-all duration-300"
                 style={{
                   fontFamily: settings.fontFamily,
-                  fontSize: `${type === 'title' ? refFontPx * 1.5 : refFontPx}px`,
+                  fontSize: `${refFontPx}px`,
                   color: settings.fontColor,
-                  fontWeight: type === 'title' ? 700 : 400,
-                  textDecoration: type === 'title' ? 'none' : 'none',
-                  letterSpacing: type === 'title' ? '0.1em' : 'normal',
-                  opacity: type === 'title' ? 0.8 : 0.8,
+                  fontStyle: 'italic',
+                  opacity: 0.8,
                   textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                 }}
               >
-                {type === 'title' ? `— ${refText} —` : `— ${refText}`}
+                — {refText}
               </p>
             )}
           </div>
@@ -251,15 +223,9 @@ export default function SlidePreview({
             )
           ) : (
             hasLyrics ? (
-              lyricsSlides.map((s, idx) => (
-                <div key={`${idx}-${s.text}`} className="w-full flex justify-center snap-center">
-                  <SlideCard 
-                    text={s.text} 
-                    refText={s.refText}
-                    isLyric={true} 
-                    isChorus={s.isChorus}
-                    type={s.type}
-                  />
+              lyricsSlides.map((line, idx) => (
+                <div key={`${idx}-${line}`} className="w-full flex justify-center snap-center">
+                  <SlideCard text={line} isLyric={true} />
                 </div>
               ))
             ) : (

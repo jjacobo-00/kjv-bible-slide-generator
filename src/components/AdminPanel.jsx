@@ -464,70 +464,36 @@ export default function AdminPanel({
         ) : (
           /* ── Lyrics Input ── */
           <section className="flex flex-col flex-1 min-h-0">
-            <SectionLabel>Song Information</SectionLabel>
-            <div className="flex flex-col gap-2 mb-4">
-              <input
-                type="text"
-                value={settings.songTitle || ''}
-                onChange={(e) => onSettingsChange('songTitle', e.target.value)}
-                placeholder="Song Title (e.g. Amazing Grace)"
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-              />
-              <input
-                type="text"
-                value={settings.songAuthor || ''}
-                onChange={(e) => onSettingsChange('songAuthor', e.target.value)}
-                placeholder="Author / Artist (e.g. John Newton)"
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-              />
-            </div>
-
             <SectionLabel>Song Lyrics</SectionLabel>
             <p className="text-[10px] text-slate-500 mb-2 leading-relaxed">
-              Paste lyrics below. Add <span className="text-indigo-400 font-bold">[Chorus]</span> or <span className="text-indigo-400 font-bold">Chorus:</span> to mark chorus sections for special styling.
+              Paste song lyrics below. Each non-empty line becomes a slide. 
+              Labels like [Verse 1] or Chorus are automatically filtered out.
             </p>
             <textarea
               value={lyricsRawText}
               onChange={(e) => onLyricsChange(e.target.value)}
               placeholder="Paste lyrics here..."
-              className="flex-1 min-h-[150px] w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors resize-none font-mono mb-4"
+              className="flex-1 min-h-[200px] w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-colors resize-none font-mono mb-4"
             />
 
-            <div className="flex flex-col gap-4">
-              <div>
-                <SectionLabel>Lines Per Slide</SectionLabel>
-                <div className="flex gap-2">
-                  {[1, 2, 4, 6].map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => onSettingsChange('lyricsLinesPerSlide', num)}
-                      className={`flex-1 py-2 rounded-lg border text-[10px] font-bold transition-all ${
-                        settings.lyricsLinesPerSlide === num
-                          ? 'border-indigo-500 bg-indigo-900/40 text-indigo-300'
-                          : 'border-slate-700 bg-slate-800 text-slate-500 hover:border-slate-600'
-                      }`}
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <label className="flex items-center justify-between group cursor-pointer">
-                <span className="text-xs font-bold text-slate-400 group-hover:text-slate-200 transition-colors">Highlight Chorus</span>
-                <div 
-                  onClick={() => onSettingsChange('highlightChorus', !settings.highlightChorus)}
-                  className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    settings.highlightChorus ? 'bg-indigo-600' : 'bg-slate-700'
+            <SectionLabel>Lyrics Layout</SectionLabel>
+            <div className="flex gap-2">
+              {[
+                { label: 'Standard (2 lines)', value: 2 },
+                { label: 'Compact (4 lines)', value: 4 },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => onSettingsChange('lyricsLinesPerSlide', opt.value)}
+                  className={`flex-1 py-2 px-1 rounded-lg border text-[10px] font-bold transition-all ${
+                    settings.lyricsLinesPerSlide === opt.value
+                      ? 'border-indigo-500 bg-indigo-900/40 text-indigo-300'
+                      : 'border-slate-700 bg-slate-800 text-slate-500 hover:border-slate-600'
                   }`}
                 >
-                  <span
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      settings.highlightChorus ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </div>
-              </label>
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </section>
         )}
@@ -536,23 +502,23 @@ export default function AdminPanel({
 
         {/* ── Background ── */}
         <section>
-          <SectionLabel>{appMode === 'bible' ? 'Background' : 'Lyrics Background'}</SectionLabel>
+          <SectionLabel>Background</SectionLabel>
 
           {/* BG Color picker */}
           <div className="flex items-center gap-2.5 mb-2">
             <label className="text-xs text-slate-400 w-16 shrink-0">Color</label>
             <input
               type="color"
-              value={appMode === 'bible' ? settings.bgColor : settings.lyricsBgColor}
-              onChange={(e) => onSettingsChange(appMode === 'bible' ? 'bgColor' : 'lyricsBgColor', e.target.value)}
+              value={settings.bgColor}
+              onChange={update('bgColor')}
               className="w-8 h-8 rounded cursor-pointer bg-transparent border border-slate-600 p-0.5"
             />
-            <span className="text-xs text-slate-500 font-mono">{appMode === 'bible' ? settings.bgColor : settings.lyricsBgColor}</span>
+            <span className="text-xs text-slate-500 font-mono">{settings.bgColor}</span>
           </div>
           <ColorSwatches
             colors={BG_PRESETS}
-            selected={appMode === 'bible' ? settings.bgColor : settings.lyricsBgColor}
-            onSelect={(c) => onSettingsChange(appMode === 'bible' ? 'bgColor' : 'lyricsBgColor', c)}
+            selected={settings.bgColor}
+            onSelect={(c) => onSettingsChange('bgColor', c)}
           />
 
           {/* BG Image Selection */}
@@ -561,8 +527,8 @@ export default function AdminPanel({
             <div className="flex flex-col gap-2">
               <input
                 type="url"
-                value={appMode === 'bible' ? settings.bgImageUrl : settings.lyricsBgImageUrl}
-                onChange={(e) => onSettingsChange(appMode === 'bible' ? 'bgImageUrl' : 'lyricsBgImageUrl', e.target.value)}
+                value={settings.bgImageUrl}
+                onChange={update('bgImageUrl')}
                 placeholder="https://example.com/bg.jpg"
                 className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
               />
@@ -584,7 +550,7 @@ export default function AdminPanel({
                       if (file) {
                         const reader = new FileReader();
                         reader.onload = (event) => {
-                          onSettingsChange(appMode === 'bible' ? 'bgImageUrl' : 'lyricsBgImageUrl', event.target.result);
+                          onSettingsChange('bgImageUrl', event.target.result);
                         };
                         reader.readAsDataURL(file);
                       }
@@ -592,9 +558,9 @@ export default function AdminPanel({
                   />
                 </label>
                 
-                {(appMode === 'bible' ? settings.bgImageUrl : settings.lyricsBgImageUrl) && (
+                {settings.bgImageUrl && (
                   <button
-                    onClick={() => onSettingsChange(appMode === 'bible' ? 'bgImageUrl' : 'lyricsBgImageUrl', '')}
+                    onClick={() => onSettingsChange('bgImageUrl', '')}
                     className="p-2 bg-slate-800 hover:bg-red-900/30 text-slate-400 hover:text-red-400 border border-slate-700 rounded-lg transition-colors"
                     title="Clear background"
                   >
@@ -606,58 +572,6 @@ export default function AdminPanel({
               </div>
             </div>
           </div>
-
-          {/* Chorus Background Override */}
-          {appMode === 'lyrics' && (
-            <div className="mt-6 pt-6 border-t border-slate-700/30 animate-in fade-in slide-in-from-top-2 duration-300">
-               <SectionLabel>Chorus Background Override</SectionLabel>
-               <p className="text-[10px] text-slate-500 mb-3">Optional: Unique background for chorus sections.</p>
-               
-               <div className="flex items-center gap-2.5 mb-3">
-                  <label className="text-xs text-slate-400 w-16 shrink-0">Color</label>
-                  <input
-                    type="color"
-                    value={settings.chorusBgColor}
-                    onChange={(e) => onSettingsChange('chorusBgColor', e.target.value)}
-                    className="w-8 h-8 rounded cursor-pointer bg-transparent border border-slate-600 p-0.5"
-                  />
-                  <span className="text-xs text-slate-500 font-mono">{settings.chorusBgColor}</span>
-               </div>
-
-               <div className="flex flex-col gap-2">
-                 <input
-                   type="url"
-                   value={settings.chorusBgImageUrl}
-                   onChange={(e) => onSettingsChange('chorusBgImageUrl', e.target.value)}
-                   placeholder="Separate Chorus Background URL"
-                   className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                 />
-                 <label className="cursor-pointer">
-                    <div className="flex items-center justify-center gap-2 py-2 px-3 bg-indigo-900/30 hover:bg-indigo-900/40 border border-indigo-500/20 rounded-lg text-xs font-semibold text-indigo-300 transition-colors">
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                      </svg>
-                      Upload Chorus Image
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            onSettingsChange('chorusBgImageUrl', event.target.result);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                  </label>
-               </div>
-            </div>
-          )}
         </section>
 
         <div className="border-t border-slate-700/50" />
