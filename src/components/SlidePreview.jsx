@@ -17,8 +17,9 @@ import { getLyricsFontSize } from '../utils/lyricsParser.js';
  * @param {string}   props.verseRef   - The verse reference string
  * @param {Object}   props.fontScale  - { fontSize, overflow, sizeLabel }
  * @param {string[]} props.lyricsSlides - Array of lyric lines
+ * @param {Function} props.onSettingsChange - Callback to update global settings
  */
-export default function SlidePreview({ settings, appMode, verseText, verseRef, fontScale, lyricsSlides = [] }) {
+export default function SlidePreview({ settings, appMode, verseText, verseRef, fontScale, lyricsSlides = [], onSettingsChange }) {
   const containerRef = useRef(null);
 
   // We'll track the container width to calculate responsive font sizes
@@ -65,7 +66,7 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
 
     return (
       <div
-        className="relative shadow-2xl shadow-black/60 rounded-sm overflow-hidden ring-1 ring-white/10 w-full mb-8 last:mb-0"
+        className="group relative shadow-2xl shadow-black/60 rounded-sm overflow-hidden ring-1 ring-white/10 w-full mb-8 last:mb-0 transition-transform duration-300 hover:scale-[1.01]"
         style={{ aspectRatio: '16 / 9', maxWidth: '1000px' }}
       >
         {/* Background layer */}
@@ -81,7 +82,9 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
 
         {/* Content area */}
         <div
-          className={`absolute inset-0 flex flex-col px-[8%] py-[8%] items-center justify-center`}
+          className={`absolute inset-0 flex flex-col px-[8%] py-[8%] items-center ${
+            settings.layout === 'top' ? 'justify-start' : 'justify-center'
+          }`}
         >
           <div className="w-full text-center">
             {/* The primary text */}
@@ -120,6 +123,29 @@ export default function SlidePreview({ settings, appMode, verseText, verseRef, f
         {/* Corner watermark */}
         <div className="absolute bottom-2 right-3 text-white/20 text-[9px] font-mono select-none pointer-events-none">
           {isLyric ? 'SONG' : 'KJV'}
+        </div>
+
+        {/* Layout Position Toggles */}
+        <div className="absolute top-4 right-4 flex gap-1.5 overflow-hidden rounded-lg bg-black/40 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 p-1 translate-y-1 group-hover:translate-y-0 translate-x-1 group-hover:translate-x-0">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onSettingsChange('layout', 'center'); }}
+            className={`p-1.5 rounded-md transition-all ${settings.layout === 'center' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+            title="Center Alignment"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 12h16M4 16h16" />
+            </svg>
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onSettingsChange('layout', 'top'); }}
+            className={`p-1.5 rounded-md transition-all ${settings.layout === 'top' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+            title="Top Alignment"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 5h16" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 10h12M4 15h8" />
+            </svg>
+          </button>
         </div>
       </div>
     );

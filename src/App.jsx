@@ -164,6 +164,7 @@ export default function App() {
         verseRef={activeSlide.verseState.verseRef}
         fontScale={fontScale}
         lyricsSlides={parsedLyrics}
+        onSettingsChange={handleSettingsChange}
       />
     </div>
   );
