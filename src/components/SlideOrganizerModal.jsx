@@ -92,20 +92,14 @@ export default function SlideOrganizerModal({ slides, onClose, onSave }) {
                              </svg>
                         </div>
 
-                        {/* Quick Controls Overlay (Hidden when dragging) */}
-                        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2 scale-95 group-hover:scale-100 ${draggedIdx !== null ? 'hidden' : ''}`}>
-                             <button onClick={(e) => { e.stopPropagation(); moveToEnd(idx, true); }} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-white shadow-xl transition-all active:scale-90" title="Move to Start">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M11 19l-7-7 7-7m8 14l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}/></svg>
-                             </button>
-                             <button onClick={(e) => { e.stopPropagation(); moveSlide(idx, -1); }} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-white shadow-xl transition-all active:scale-90" title="Move Left">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}/></svg>
-                             </button>
-                             <button onClick={(e) => { e.stopPropagation(); moveSlide(idx, 1); }} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-white shadow-xl transition-all active:scale-90" title="Move Right">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}/></svg>
-                             </button>
-                             <button onClick={(e) => { e.stopPropagation(); moveToEnd(idx, false); }} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-white shadow-xl transition-all active:scale-90" title="Move to End">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M13 5l7 7-7 7M5 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}/></svg>
-                             </button>
+                        {/* Drag Indicator Overlay (Visible on hover) */}
+                        <div className={`absolute inset-0 bg-indigo-600/10 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center pointer-events-none ${draggedIdx !== null ? 'hidden' : ''}`}>
+                             <div className="bg-slate-900/80 px-3 py-1.5 rounded-full border border-indigo-500/30 flex items-center gap-2 shadow-2xl scale-90 group-hover:scale-100 transition-transform">
+                                <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3-0.5a3 3 0 006 0V6a1.5 1.5 0 113 0V12m-3-0.5a3 3 0 006 0V6a1.5 1.5 0 113 0V12" />
+                                </svg>
+                                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Drag to Move</span>
+                             </div>
                         </div>
                         
                         {/* Ref Label */}
