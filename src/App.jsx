@@ -175,8 +175,9 @@ export default function App() {
       <SlidePreview
         settings={settings}
         appMode={appMode}
-        verseText={activeSlide.verseState.verseText}
-        verseRef={activeSlide.verseState.verseRef}
+        slides={slides}
+        activeSlideId={activeSlideId}
+        onSetActiveSlide={setActiveSlideId}
         fontScale={fontScale}
         lyricsSlides={parsedLyrics}
         onSettingsChange={handleSettingsChange}
