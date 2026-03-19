@@ -151,13 +151,13 @@ export default function AdminPanel({
 
   return (
     <aside className="w-80 min-w-[280px] flex-shrink-0 bg-slate-900 border-r border-slate-700/50 flex flex-col h-screen overflow-y-auto shadow-2xl">
-      <div className="px-5 py-6 border-b border-slate-700/60 bg-gradient-to-b from-indigo-900/40 to-slate-900 flex flex-col items-center text-center gap-3">
-        <img src={cbtLogo} alt="CBT Logo" className="w-16 h-16 object-contain" />
-        <div>
+      <div className="px-5 py-5 border-b border-slate-700/60 bg-gradient-to-r from-indigo-900/40 to-slate-900 flex items-center gap-3">
+        <img src={cbtLogo} alt="CBT Logo" className="w-10 h-10 object-contain" />
+        <div className="flex flex-col">
           <h1 className="text-lg font-bold text-white tracking-tight leading-tight">
             CBT KJV Bible &<br/>Lyrics Generator
           </h1>
-          <p className="text-xs text-slate-400 mt-1">PowerPoint Export</p>
+          <p className="text-xs text-slate-400 mt-0.5">PowerPoint Export</p>
         </div>
       </div>
 
