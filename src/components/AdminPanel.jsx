@@ -224,35 +224,61 @@ export default function AdminPanel({
                   Add
                 </button>
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar transition-all">
                 {slides.map((s, index) => (
                   <div 
                     key={s.id} 
-                    className={`flex items-center h-8 rounded border shrink-0 transition-all overflow-hidden ${
+                    className={`group relative h-14 w-24 rounded-xl border shrink-0 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center ${
                       activeSlideId === s.id
-                        ? 'border-indigo-500 bg-indigo-900/40 text-white ring-1 ring-indigo-500/30'
-                        : 'border-slate-600 bg-slate-800 text-slate-400 hover:border-slate-500'
+                        ? 'border-indigo-500 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white shadow-lg shadow-indigo-500/30 -translate-y-0.5 scale-105 z-10'
+                        : 'border-slate-700 bg-slate-800/50 text-slate-500 hover:border-slate-500 hover:text-slate-200'
                     }`}
+                    onClick={() => onSetActiveSlide(s.id)}
                   >
-                    <button
-                      onClick={() => onSetActiveSlide(s.id)}
-                      className={`flex items-center justify-center h-full text-xs font-semibold px-4 hover:text-white transition-colors outline-none`}
-                    >
+                    <span className={`text-lg font-black tracking-tight ${activeSlideId === s.id ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>
                       {index + 1}
-                    </button>
+                    </span>
+                    
+                    {/* Tiny summary line (ref) */}
+                    {s.verseState.verseRef && (
+                      <span className={`text-[8px] font-bold uppercase tracking-tighter truncate w-[80%] text-center mt-0.5 opacity-60 ${activeSlideId === s.id ? 'text-indigo-100' : 'text-slate-600'}`}>
+                        {s.verseState.verseRef.split(' ').slice(0, 1)}
+                      </span>
+                    )}
+
+                    {/* Hover Delete Button */}
                     {slides.length > 1 && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); onRemoveSlide(s.id); }}
-                        className="flex items-center justify-center h-full px-2 bg-black/20 hover:bg-red-500/20 hover:text-red-400 text-slate-500 transition-colors outline-none"
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          onRemoveSlide(s.id); 
+                        }}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500/90 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg scale-75 group-hover:scale-100 z-20"
                         title="Delete slide"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     )}
+
+                    {/* Active Indicator Glow */}
+                    {activeSlideId === s.id && (
+                       <div className="absolute inset-0 rounded-xl bg-indigo-500/20 animate-pulse pointer-events-none" />
+                    )}
                   </div>
                 ))}
+
+                {/* Inline Add Button (Quick Access) */}
+                <button
+                   onClick={onAddSlide}
+                   className="h-14 w-12 rounded-xl border-2 border-dashed border-slate-700 flex items-center justify-center text-slate-600 hover:border-indigo-500/50 hover:text-indigo-400 hover:bg-indigo-500/5 transition-all shrink-0"
+                   title="Add new slide"
+                >
+                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                   </svg>
+                </button>
               </div>
             </section>
 
