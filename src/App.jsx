@@ -24,16 +24,22 @@ const DEFAULT_SETTINGS = {
   songAuthor: '',
 };
 
-const createNewSlide = (id) => ({
+const createNewSlide = (id, verseText = null, verseRef = null) => ({
   id,
-  verseState: { verseText: null, verseRef: null, loading: false, error: null },
-  verseQuery: 'John 3:16'
+  verseState: { verseText, verseRef, loading: false, error: null },
+  verseQuery: verseRef || 'John 3:16'
 });
 
 export default function App() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [appMode, setAppMode] = useState('bible'); // 'bible' | 'lyrics'
-  const [slides, setSlides] = useState([createNewSlide(Date.now())]);
+  const [slides, setSlides] = useState([
+    createNewSlide(
+      Date.now(),
+      "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+      "John 3:16"
+    ),
+  ]);
   const [activeSlideId, setActiveSlideId] = useState(slides[0].id);
   const [lyricsRawText, setLyricsRawText] = useState('');
 
