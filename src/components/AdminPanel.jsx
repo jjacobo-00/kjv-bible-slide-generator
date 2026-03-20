@@ -39,9 +39,9 @@ const FONT_PRESETS = [
 
 // ── Reusable subcomponents ────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+function SectionLabel({ children, className = "mb-2" }) {
   return (
-    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
+    <p className={`text-[10px] font-bold uppercase tracking-widest text-slate-500 ${className} px-1`}>
       {children}
     </p>
   );
@@ -220,7 +220,7 @@ export default function AdminPanel({
             <section>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <SectionLabel>Slides</SectionLabel>
+                  <SectionLabel className="mb-0">Slides</SectionLabel>
                   <button
                     onClick={() => setIsReordering(!isReordering)}
                     className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded transition-all ${
@@ -348,7 +348,7 @@ export default function AdminPanel({
 
             {/* ── Verse Lookup ── */}
             <section className="relative">
-              <SectionLabel>Scripture Reference</SectionLabel>
+              <SectionLabel>Search for a Verse</SectionLabel>
               <div className="flex gap-2 relative">
                 <div className="flex-1 relative">
                   <input
@@ -595,7 +595,7 @@ export default function AdminPanel({
 
         {/* ── Font ── */}
         <section>
-          <SectionLabel>Typography</SectionLabel>
+          <SectionLabel>Text Styles</SectionLabel>
 
           {/* Base Font Size */}
           <div className="mb-3">
@@ -652,7 +652,7 @@ export default function AdminPanel({
 
         {/* ── Layout ── */}
         <section>
-          <SectionLabel>Slide Layout</SectionLabel>
+          <SectionLabel>Text Alignment</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
             {[
               { id: 'center', label: 'Centered', icon: <path d="M12 3v18M3 12h18" strokeDasharray="2 2"/> },
