@@ -4,9 +4,10 @@
  * Sidebar (AdminPanel) + Main area (SlidePreview).
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import AdminPanel from './components/AdminPanel.jsx';
 import SlidePreview from './components/SlidePreview.jsx';
+import HelpModal from './components/HelpModal.jsx';
 import { fetchBibleVerse } from './utils/bibleApi.js';
 import { getScaledFont } from './utils/fontScaler.js';
 import { parseLyrics } from './utils/lyricsParser.js';
@@ -41,6 +42,15 @@ export default function App() {
   ]);
   const [activeSlideId, setActiveSlideId] = useState(slides[0].id);
   const [lyricsRawText, setLyricsRawText] = useState('');
+  const [showHelp, setShowHelp] = useState(false);
+
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('kjv_generator_visited');
+    if (!hasVisited) {
+      setShowHelp(true);
+      localStorage.setItem('kjv_generator_visited', 'true');
+    }
+  }, []);
 
   const activeSlide = slides.find((s) => s.id === activeSlideId) || slides[0];
 
@@ -160,6 +170,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0a0c14]">
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       <AdminPanel
         settings={settings}
         appMode={appMode}
@@ -178,6 +189,7 @@ export default function App() {
         lyricsRawText={lyricsRawText}
         onLyricsChange={setLyricsRawText}
         lyricsSlides={parsedLyrics}
+        onShowHelp={() => setShowHelp(true)}
       />
       <SlidePreview
         settings={settings}
