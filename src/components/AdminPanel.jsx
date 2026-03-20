@@ -100,6 +100,7 @@ export default function AdminPanel({
   onLyricsChange,
   lyricsSlides,
   onReorderSave,
+  onShowHelp,
 }) {
   const verseState = activeSlide.verseState;
   const verseQuery = activeSlide.verseQuery;
@@ -167,19 +168,24 @@ export default function AdminPanel({
 
   return (
     <aside className="w-80 min-w-[280px] flex-shrink-0 bg-slate-900 border-r border-slate-700/50 flex flex-col h-screen overflow-y-auto shadow-2xl">
-      <div className="px-6 py-8 border-b border-slate-700/60 bg-gradient-to-br from-indigo-900/40 via-slate-900 to-slate-900 flex items-center justify-center gap-4">
-        <img src={logo} alt="Logo" className="w-12 h-12 object-contain drop-shadow-xl" />
-        <div className="flex flex-col">
-          <h1 className="text-[1.1rem] font-extrabold text-white tracking-tight leading-[1.2]">
-            CBT KJV Bible &<br/>Lyrics Generator
-          </h1>
-          <div className="flex items-center gap-2 mt-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">
-              PowerPoint Export
-            </p>
+      <div className="px-6 py-8 border-b border-slate-700/60 bg-gradient-to-br from-indigo-900/40 via-slate-900 to-slate-900 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="Logo" className="w-10 h-10 object-contain drop-shadow-xl" />
+          <div className="flex flex-col">
+            <h1 className="text-[0.95rem] font-extrabold text-white tracking-tight leading-[1.2]">
+              CBT KJV Bible &<br/>Lyrics Generator
+            </h1>
           </div>
         </div>
+        <button 
+          onClick={onShowHelp}
+          className="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-indigo-400 hover:text-white transition-all shadow-lg shrink-0 animate-help-pulse"
+          title="Show Help Guide"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
       </div>
 
       <div className="px-5 py-3 flex border-b border-slate-700/50">
