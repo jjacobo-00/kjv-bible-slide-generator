@@ -464,6 +464,17 @@ export default function AdminPanel({
         ) : (
           /* ── Lyrics Input ── */
           <section className="flex flex-col flex-1 min-h-0">
+            <SectionLabel>Song Title (Optional)</SectionLabel>
+            <div className="flex flex-col gap-3 mb-4">
+              <input
+                type="text"
+                value={settings.songTitle}
+                onChange={update('songTitle')}
+                placeholder="e.g. Amazing Grace"
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
+
             <SectionLabel>Song Lyrics</SectionLabel>
             <p className="text-[10px] text-slate-500 mb-2 leading-relaxed">
               Paste song lyrics below. Each non-empty line becomes a slide. 

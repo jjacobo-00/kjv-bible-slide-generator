@@ -21,7 +21,6 @@ const DEFAULT_SETTINGS = {
   lyricsLinesPerSlide: 2,
   baseFontSize: 42, 
   songTitle: '',
-  songAuthor: '',
 };
 
 const createNewSlide = (id, verseText = null, verseRef = null) => ({
@@ -156,8 +155,8 @@ export default function App() {
   }, [activeSlide.verseState.verseText, activeSlide.verseState.verseRef, appMode]);
 
   const parsedLyrics = useMemo(() => {
-    return parseLyrics(lyricsRawText, settings.lyricsLinesPerSlide, settings.songTitle, settings.songAuthor);
-  }, [lyricsRawText, settings.lyricsLinesPerSlide, settings.songTitle, settings.songAuthor]);
+    return parseLyrics(lyricsRawText, settings.lyricsLinesPerSlide, settings.songTitle);
+  }, [lyricsRawText, settings.lyricsLinesPerSlide, settings.songTitle]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0a0c14]">

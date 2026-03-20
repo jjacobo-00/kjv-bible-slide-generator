@@ -3,14 +3,14 @@
  * Parses raw lyric text into an array of clean, individual slide strings.
  */
 
-export function parseLyrics(rawText, linesPerSlide = 2, songTitle = '', songAuthor = '') {
+export function parseLyrics(rawText, linesPerSlide = 2, songTitle = '') {
   const slides = [];
 
   // Prepend Title Slide
   if (songTitle && songTitle.trim()) {
     slides.push({
       text: songTitle.trim(),
-      refText: songAuthor?.trim() || '',
+      refText: '',
       type: 'title'
     });
   }
