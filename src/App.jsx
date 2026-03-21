@@ -45,10 +45,9 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
-    const hasVisited = localStorage.getItem('kjv_generator_visited');
-    if (!hasVisited) {
+    const hideHelpOnboarding = localStorage.getItem('kjv_hide_help_onboarding') === 'true';
+    if (!hideHelpOnboarding) {
       setShowHelp(true);
-      localStorage.setItem('kjv_generator_visited', 'true');
     }
   }, []);
 

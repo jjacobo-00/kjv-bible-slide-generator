@@ -66,11 +66,21 @@ const tabs = [
 
 export default function HelpModal({ onClose }) {
   const [activeTabIdx, setActiveTabIdx] = useState(0);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const tab = tabs[activeTabIdx];
+
+  const handleClose = () => {
+    if (dontShowAgain) {
+      localStorage.setItem('kjv_hide_help_onboarding', 'true');
+    } else {
+      localStorage.setItem('kjv_hide_help_onboarding', 'false');
+    }
+    onClose();
+  };
 
   const next = () => {
     if (activeTabIdx < tabs.length - 1) setActiveTabIdx(activeTabIdx + 1);
-    else onClose();
+    else handleClose();
   };
 
   const prev = () => {
@@ -78,7 +88,7 @@ export default function HelpModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300" onClick={onClose}>
+    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300" onClick={handleClose}>
       <div 
         className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[650px] animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
@@ -89,7 +99,7 @@ export default function HelpModal({ onClose }) {
             <h2 className="text-xl font-bold text-white tracking-tight">How to Use</h2>
             <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mt-1">Quick Start & Features Guide</p>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors p-2 hover:bg-slate-800 rounded-xl">
+          <button onClick={handleClose} className="text-slate-500 hover:text-white transition-colors p-2 hover:bg-slate-800 rounded-xl">
              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -135,10 +145,28 @@ export default function HelpModal({ onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-slate-950/80 flex items-center justify-between border-t border-slate-800 shrink-0">
-          <div className="text-[11px] font-mono text-slate-600 uppercase tracking-widest">
-            Step {activeTabIdx + 1} of {tabs.length}
-          </div>
+        <div className="p-6 bg-slate-950/80 flex items-center gap-4 border-t border-slate-800 shrink-0">
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <div className="relative">
+              <input 
+                type="checkbox" 
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="peer sr-only"
+              />
+              <div className="w-5 h-5 border-2 border-slate-600 rounded flex items-center justify-center peer-checked:bg-indigo-600 peer-checked:border-indigo-600 transition-all group-hover:border-slate-400">
+                <svg className={`w-3 h-3 text-white transition-opacity ${dontShowAgain ? 'opacity-100' : 'opacity-0'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-slate-400 group-hover:text-slate-200 transition-colors uppercase tracking-wider">
+              Don't show again
+            </span>
+          </label>
+
+          <div className="flex-1" />
+
           <div className="flex gap-3">
              {activeTabIdx > 0 && (
                <button onClick={prev} className="px-5 py-2.5 text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all border border-transparent hover:border-slate-700">
