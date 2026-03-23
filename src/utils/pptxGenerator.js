@@ -48,18 +48,23 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
 
   if (appMode === 'bible') {
     for (const slideData of slides) {
-      const { verseState } = slideData;
+      const { verseState, type } = slideData;
       const { verseText, verseRef } = verseState;
+      const isTitle = type === 'title';
 
       // Skip empty slides
       if (!verseText) continue;
 
-      if (!firstValidRef && verseRef) {
+      if (!firstValidRef && verseRef && !isTitle) {
         firstValidRef = verseRef;
+      } else if (!firstValidRef && isTitle) {
+        firstValidRef = verseText;
       }
 
-      const fullText = `${verseText}\n\n— ${verseRef}`;
-      const { fontSize } = getScaledFont(fullText);
+      const fullText = isTitle ? verseText : `${verseText}\n\n— ${verseRef}`;
+      const { fontSize: scaledFontSize } = getScaledFont(fullText);
+      const baseFontSize = settings.baseFontSize || scaledFontSize;
+      const finalFontSize = isTitle ? baseFontSize * 1.5 : baseFontSize;
 
       const slide = pres.addSlide();
 
@@ -73,15 +78,28 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
       // Determine alignment based on layout setting
       const layout = settings.layout || 'center';
       const valign = 'middle';
-      const align = (layout === 'left') ? 'left' : 'center';
+      const align = isTitle ? 'center' : ((layout === 'left') ? 'left' : 'center');
 
       const padding = 0.5;
+      const textBody = [
+        { text: verseText, options: { fontSize: finalFontSize, fontFace: settings.fontFamily, color: sanitizeHex(settings.fontColor), breakLine: true, bold: isTitle } }
+      ];
+
+      if (verseRef) {
+        textBody.push({ text: '', options: { breakLine: true } });
+        textBody.push({ 
+          text: isTitle ? `— ${verseRef} —` : `— ${verseRef}`, 
+          options: { 
+            fontSize: Math.max(14, finalFontSize * 0.65), 
+            fontFace: settings.fontFamily, 
+            color: sanitizeHex(settings.fontColor), 
+            italic: true 
+          } 
+        });
+      }
+
       slide.addText(
-        [
-          { text: verseText, options: { fontSize: settings.baseFontSize || fontSize, fontFace: settings.fontFamily, color: sanitizeHex(settings.fontColor), breakLine: true } },
-          { text: '', options: { breakLine: true } },
-          { text: `— ${verseRef}`, options: { fontSize: Math.max(14, (settings.baseFontSize || fontSize) * 0.65), fontFace: settings.fontFamily, color: sanitizeHex(settings.fontColor), italic: true } },
-        ],
+        textBody,
         { x: padding + (align === 'left' ? 0.5 : 0), y: padding, w: 13.33 - padding * 2 - (align === 'left' ? 1.0 : 0), h: 7.5 - padding * 2, valign, align, wrap: true, fit: 'shrink' }
       );
     }

@@ -260,7 +260,7 @@ export default function SlidePreview({
             hasBibleContent ? (
               bibleSlidesToRender.map((s) => (
                 <div key={s.id} ref={el => slideRefs.current[s.id] = el} className="w-full flex justify-center snap-center">
-                  <SlideCard text={s.verseState.verseText || ""} refText={s.verseState.verseRef} />
+                  <SlideCard text={s.verseState.verseText || ""} refText={s.verseState.verseRef} type={s.type || 'bible'} />
                 </div>
               ))
             ) : (

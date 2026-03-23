@@ -72,11 +72,19 @@ export default function App() {
     }));
     try {
       const isMulti = query.includes(',');
-      const results = isMulti
+      let results = isMulti
         ? await fetchMultipleVerses(query)
         : await fetchBibleVerse(query);
 
       if (!results || results.length === 0) throw new Error('No verses found');
+
+      // Ensure titles always come first if present
+      if (results.some(r => r.type === 'title')) {
+        results = [
+          ...results.filter(r => r.type === 'title'),
+          ...results.filter(r => r.type !== 'title')
+        ];
+      }
 
       setSlides((prev) => {
         const activeIndex = prev.findIndex((s) => s.id === activeSlideId);
@@ -86,6 +94,7 @@ export default function App() {
         // 1. Update the current active slide with result #1
         newSlides[activeIndex] = {
           ...newSlides[activeIndex],
+          type: results[0].type || 'bible',
           verseState: { 
             ...newSlides[activeIndex].verseState, 
             verseText: results[0].verseText, 
@@ -100,6 +109,7 @@ export default function App() {
           const insertTime = Date.now();
           const extraSlides = results.slice(1).map((res, idx) => ({
             id: insertTime + idx + 1,
+            type: res.type || 'bible',
             verseState: { 
               verseText: res.verseText, 
               verseRef: res.verseRef, 

@@ -194,6 +194,17 @@ export async function fetchMultipleVerses(query) {
   if (segments.length === 0) throw new Error('Query is required');
 
   // Fetch all in parallel, then flatten
-  const resultsArrays = await Promise.all(segments.map(seg => fetchBibleVerse(seg)));
+  const resultsArrays = await Promise.all(segments.map(async seg => {
+    const lowerSeg = seg.toLowerCase();
+    if (lowerSeg.startsWith('title:')) {
+      const titleContent = seg.substring(6).trim();
+      return [{
+        verseText: titleContent,
+        verseRef: "Title",
+        type: 'title'
+      }];
+    }
+    return fetchBibleVerse(seg);
+  }));
   return resultsArrays.flat();
 }
