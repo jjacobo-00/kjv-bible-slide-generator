@@ -8,7 +8,7 @@ import { useState, useMemo, useEffect } from 'react';
 import AdminPanel from './components/AdminPanel.jsx';
 import SlidePreview from './components/SlidePreview.jsx';
 import HelpModal from './components/HelpModal.jsx';
-import { fetchBibleVerse } from './utils/bibleApi.js';
+import { fetchBibleVerse, fetchMultipleVerses } from './utils/bibleApi.js';
 import { getScaledFont } from './utils/fontScaler.js';
 import { parseLyrics } from './utils/lyricsParser.js';
 
@@ -71,7 +71,11 @@ export default function App() {
       verseState: { ...s.verseState, loading: true, error: null },
     }));
     try {
-      const results = await fetchBibleVerse(query);
+      const isMulti = query.includes(',');
+      const results = isMulti
+        ? await fetchMultipleVerses(query)
+        : await fetchBibleVerse(query);
+
       if (!results || results.length === 0) throw new Error('No verses found');
 
       setSlides((prev) => {
@@ -88,9 +92,10 @@ export default function App() {
             verseRef: results[0].verseRef, 
             loading: false 
           },
+          verseQuery: results[0].verseRef,
         };
 
-        // 2. If it's a range, insert additional slides after this one
+        // 2. If there are additional results, insert them as slides after this one
         if (results.length > 1) {
           const insertTime = Date.now();
           const extraSlides = results.slice(1).map((res, idx) => ({

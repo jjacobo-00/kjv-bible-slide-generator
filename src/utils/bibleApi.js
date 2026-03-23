@@ -92,7 +92,9 @@ export async function fetchBibleVerse(query) {
  */
 export async function getAutocompleteSuggestions(query) {
   const data = await loadBibleData();
-  const rawQ = query.trimStart();
+  // For comma-separated input, operate on only the last segment
+  const segments = query.split(',');
+  const rawQ = segments[segments.length - 1].trimStart();
   if (!rawQ) return [];
 
   // Parse logic: 
@@ -177,5 +179,21 @@ export async function getAutocompleteSuggestions(query) {
     });
   }
 
-  return Array.from(new Set(suggestions)).slice(0, 8);
+  // If there were previous segments, prefix suggestions with them
+  const prefix = segments.length > 1 ? segments.slice(0, -1).join(',') + ', ' : '';
+  return Array.from(new Set(suggestions.map(s => prefix + s))).slice(0, 8);
+}
+
+/**
+ * Fetches multiple comma-separated verse references in parallel.
+ * e.g. "Genesis 1:1, John 3:16, 1 Peter 3:8"
+ * Returns a flat array of verse objects.
+ */
+export async function fetchMultipleVerses(query) {
+  const segments = query.split(',').map(s => s.trim()).filter(Boolean);
+  if (segments.length === 0) throw new Error('Query is required');
+
+  // Fetch all in parallel, then flatten
+  const resultsArrays = await Promise.all(segments.map(seg => fetchBibleVerse(seg)));
+  return resultsArrays.flat();
 }
