@@ -16,7 +16,7 @@ import { parseLyrics } from './utils/lyricsParser.js';
 const DEFAULT_SETTINGS = {
   bgColor: '#1a1a2e',
   bgImageUrl: '',
-  fontFamily: 'Playfair Display',
+  fontFamily: 'Georgia',
   fontColor: '#F8F1E0',
   layout: 'center', // 'center' | 'top'
   lyricsLinesPerSlide: 2,

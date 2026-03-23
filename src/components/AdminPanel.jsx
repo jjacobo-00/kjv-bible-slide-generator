@@ -12,18 +12,17 @@ import logo from '../assets/logo.svg';
 
 // ── Font Options ──────────────────────────────────────────────────────────────
 const FONT_OPTIONS = [
-  { label: 'Playfair Display', value: 'Playfair Display' },
-  { label: 'Lora', value: 'Lora' },
-  { label: 'EB Garamond', value: 'EB Garamond' },
-  { label: 'Cinzel', value: 'Cinzel' },
-  { label: 'Merriweather', value: 'Merriweather' },
-  { label: 'Source Serif 4', value: 'Source Serif 4' },
+  { label: 'Arial', value: 'Arial' },
+  { label: 'Calibri', value: 'Calibri' },
   { label: 'Times New Roman', value: 'Times New Roman' },
   { label: 'Georgia', value: 'Georgia' },
-  { label: 'Roboto', value: 'Roboto' },
-  { label: 'Inter', value: 'Inter' },
-  { label: 'Arial', value: 'Arial' },
+  { label: 'Cambria', value: 'Cambria' },
   { label: 'Verdana', value: 'Verdana' },
+  { label: 'Tahoma', value: 'Tahoma' },
+  { label: 'Trebuchet MS', value: 'Trebuchet MS' },
+  { label: 'Garamond', value: 'Garamond' },
+  { label: 'Impact', value: 'Impact' },
+  { label: 'Courier New', value: 'Courier New' },
 ];
 
 // ── Preset Color Swatches ────────────────────────────────────────────────────
@@ -528,9 +527,18 @@ export default function AdminPanel({
               type="color"
               value={settings.bgColor}
               onChange={update('bgColor')}
-              className="w-8 h-8 rounded cursor-pointer bg-transparent border border-slate-600 p-0.5"
+              className="w-10 h-10 rounded-lg cursor-pointer bg-slate-800 border border-slate-600 p-1"
             />
-            <span className="text-xs text-slate-500 font-mono">{settings.bgColor}</span>
+            <input
+              type="text"
+              value={settings.bgColor}
+              onChange={(e) => {
+                let val = e.target.value;
+                if (val && !val.startsWith('#')) val = '#' + val;
+                onSettingsChange('bgColor', val);
+              }}
+              className="w-24 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-400 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
           </div>
           <ColorSwatches
             colors={BG_PRESETS}
@@ -637,9 +645,18 @@ export default function AdminPanel({
               type="color"
               value={settings.fontColor}
               onChange={update('fontColor')}
-              className="w-8 h-8 rounded cursor-pointer bg-transparent border border-slate-600 p-0.5"
+              className="w-10 h-10 rounded-lg cursor-pointer bg-slate-800 border border-slate-600 p-1"
             />
-            <span className="text-xs text-slate-500 font-mono">{settings.fontColor}</span>
+            <input
+              type="text"
+              value={settings.fontColor}
+              onChange={(e) => {
+                let val = e.target.value;
+                if (val && !val.startsWith('#')) val = '#' + val;
+                onSettingsChange('fontColor', val);
+              }}
+              className="w-24 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-400 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
           </div>
           <ColorSwatches
             colors={FONT_PRESETS}
