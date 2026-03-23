@@ -21,7 +21,17 @@ const FONT_OPTIONS = [
   { label: 'Tahoma', value: 'Tahoma' },
   { label: 'Trebuchet MS', value: 'Trebuchet MS' },
   { label: 'Garamond', value: 'Garamond' },
-  { label: 'Impact', value: 'Impact' },
+  { label: 'Century Gothic', value: 'Century Gothic' },
+  { label: 'Franklin Gothic', value: 'Franklin Gothic Medium' },
+  { label: 'Book Antiqua', value: 'Book Antiqua' },
+  { label: 'Palatino', value: 'Palatino Linotype' },
+  { label: 'Constantia', value: 'Constantia' },
+  { label: 'Corbel', value: 'Corbel' },
+  { label: 'Candara', value: 'Candara' },
+  { label: 'Baskerville', value: 'Baskerville Old Face' },
+  { label: 'Century Schoolbook', value: 'Century Schoolbook' },
+  { label: 'Bookman Old Style', value: 'Bookman Old Style' },
+  { label: 'Gill Sans', value: 'Gill Sans MT' },
   { label: 'Courier New', value: 'Courier New' },
 ];
 
