@@ -7,6 +7,7 @@
 import pptxgen from 'pptxgenjs';
 import { getScaledFont } from './fontScaler.js';
 import { getLyricsFontSize } from './lyricsParser.js';
+import { processImage } from './imageUtils.js';
 
 /**
  * @typedef {Object} SlideSettings
@@ -44,6 +45,13 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
   // Standard widescreen 16:9
   pres.layout = 'LAYOUT_WIDE'; // 13.33" x 7.5"
 
+  // 1. Pre-process background image once (compression + CORS check)
+  let processedBgImage = null;
+  if (settings.bgImageUrl && settings.bgImageUrl.trim().length > 0) {
+    // Quality 0.95 (95%) as requested (90-99%)
+    processedBgImage = await processImage(settings.bgImageUrl.trim(), 0.95);
+  }
+
   let firstValidRef = null;
 
   if (appMode === 'bible') {
@@ -69,8 +77,8 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
       const slide = pres.addSlide();
 
       // Background
-      if (settings.bgImageUrl && settings.bgImageUrl.trim().length > 0) {
-        try { slide.background = { path: settings.bgImageUrl.trim() }; } catch { slide.background = { color: sanitizeHex(settings.bgColor) }; }
+      if (processedBgImage) {
+        slide.background = { data: processedBgImage };
       } else {
         slide.background = { color: sanitizeHex(settings.bgColor) };
       }
@@ -113,8 +121,8 @@ export async function generateAndDownloadPptx(slides, settings, appMode = 'bible
       const slide = pres.addSlide();
 
       // Background
-      if (settings.bgImageUrl && settings.bgImageUrl.trim().length > 0) {
-        try { slide.background = { path: settings.bgImageUrl.trim() }; } catch { slide.background = { color: sanitizeHex(settings.bgColor) }; }
+      if (processedBgImage) {
+        slide.background = { data: processedBgImage };
       } else {
         slide.background = { color: sanitizeHex(settings.bgColor) };
       }
