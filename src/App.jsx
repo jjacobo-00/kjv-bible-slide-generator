@@ -8,6 +8,7 @@ import { useState, useMemo, useEffect } from 'react';
 import AdminPanel from './components/AdminPanel.jsx';
 import SlidePreview from './components/SlidePreview.jsx';
 import HelpModal from './components/HelpModal.jsx';
+import PresentationMode from './components/PresentationMode.jsx';
 import { fetchBibleVerse, fetchMultipleVerses } from './utils/bibleApi.js';
 import { getScaledFont } from './utils/fontScaler.js';
 import { parseLyrics } from './utils/lyricsParser.js';
@@ -43,6 +44,7 @@ export default function App() {
   const [activeSlideId, setActiveSlideId] = useState(slides[0].id);
   const [lyricsRawText, setLyricsRawText] = useState('');
   const [showHelp, setShowHelp] = useState(false);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
 
   useEffect(() => {
     const hideHelpOnboarding = localStorage.getItem('kjv_hide_help_onboarding') === 'true';
@@ -185,6 +187,19 @@ export default function App() {
   return (
     <div className="flex h-screen overflow-hidden bg-[#0a0c14]">
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+      {isPresentationMode && (
+        <PresentationMode 
+          settings={settings}
+          appMode={appMode}
+          slides={slides}
+          lyricsSlides={parsedLyrics}
+          onClose={() => setIsPresentationMode(false)}
+          initialSlideIndex={appMode === 'bible' 
+            ? slides.findIndex(s => s.id === activeSlideId) 
+            : 0 // For lyrics, maybe we can find a better way to track current index, but 0 is safe for now
+          }
+        />
+      )}
       <AdminPanel
         settings={settings}
         appMode={appMode}
@@ -204,6 +219,7 @@ export default function App() {
         onLyricsChange={setLyricsRawText}
         lyricsSlides={parsedLyrics}
         onShowHelp={() => setShowHelp(true)}
+        onPresent={() => setIsPresentationMode(true)}
       />
       <SlidePreview
         settings={settings}

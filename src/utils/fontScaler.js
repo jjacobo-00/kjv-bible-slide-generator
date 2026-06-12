@@ -42,8 +42,9 @@ export function getScaledFont(text = '') {
  * @returns {number} CSS font size in pixels for the preview
  */
 export function ptToCssPreviewPx(ptSize, previewWidthPx = 960) {
-  // 10" slide → previewWidthPx, so 1 inch = previewWidthPx/10 px
+  // PowerPoint 16:9 slide is 13.33" x 7.5"
+  // 13.33" slide → previewWidthPx, so 1 inch = previewWidthPx/13.33 px
   // 1 pt = 1/72 inch
-  const pxPerPt = previewWidthPx / 10 / 72;
+  const pxPerPt = previewWidthPx / 13.33 / 72;
   return ptSize * pxPerPt;
 }
