@@ -72,6 +72,7 @@ export async function fetchBibleVerse(query) {
     // We want to keep plain added words but drop ones containing colons.
     let cleanedText = chapter[i]
       .replace(/\{([^}]+)\}/g, (match, contents) => contents.includes(':') ? '' : contents)
+      .replace(/^(ALEPH|BETH|GIMEL|DALETH|HE|VAU|ZAIN|CHETH|TETH|JOD|CAPH|LAMED|MEM|NUN|SAMECH|AIN|PE|TZADDI|KOPH|RESH|SCHIN|TAU)\.\s/i, '')
       .replace(/\s+/g, ' ')
       .trim();
 
