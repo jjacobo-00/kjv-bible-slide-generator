@@ -9,6 +9,7 @@ import AdminPanel from './components/AdminPanel.jsx';
 import SlidePreview from './components/SlidePreview.jsx';
 import HelpModal from './components/HelpModal.jsx';
 import PresentationMode from './components/PresentationMode.jsx';
+import ExportStatus from './components/ExportStatus.jsx';
 import { fetchBibleVerse, fetchMultipleVerses } from './utils/bibleApi.js';
 import { getScaledFont } from './utils/fontScaler.js';
 import { parseLyrics } from './utils/lyricsParser.js';
@@ -45,6 +46,7 @@ export default function App() {
   const [lyricsRawText, setLyricsRawText] = useState('');
   const [showHelp, setShowHelp] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const hideHelpOnboarding = localStorage.getItem('kjv_hide_help_onboarding') === 'true';
@@ -220,6 +222,8 @@ export default function App() {
         lyricsSlides={parsedLyrics}
         onShowHelp={() => setShowHelp(true)}
         onPresent={() => setIsPresentationMode(true)}
+        isDownloading={isDownloading}
+        setIsDownloading={setIsDownloading}
       />
       <SlidePreview
         settings={settings}
@@ -231,6 +235,7 @@ export default function App() {
         lyricsSlides={parsedLyrics}
         onSettingsChange={handleSettingsChange}
       />
+      <ExportStatus isVisible={isDownloading} />
     </div>
   );
 }

@@ -4,22 +4,104 @@
  * Maintains a 16:9 (widescreen) aspect ratio and updates in real-time.
  */
 
-import { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, memo } from 'react';
 import { ptToCssPreviewPx } from '../utils/fontScaler.js';
 import { getLyricsFontSize } from '../utils/lyricsParser.js';
 
+// Memoized Slide Component to prevent unnecessary re-renders
+const SlideCard = memo(({ 
+  text, 
+  refText, 
+  isLyric = false, 
+  type = 'lyrics', 
+  settings, 
+  mainFontPx, 
+  refFontPx, 
+  fontScale, 
+  onSettingsChange, 
+  backgroundStyle 
+}) => {
+  const isTitle = type === 'title';
+  const lyricFontSizePt = isLyric ? (settings.baseFontSize || getLyricsFontSize(text)) : (settings.baseFontSize || fontScale?.fontSize || 42);
+  const lyricFontSizePx = ptToCssPreviewPx(lyricFontSizePt, 800);
+  const layout = settings.layout || 'center';
+  
+  const layoutClasses = isTitle ? 'items-center justify-center text-center' : {
+    center: 'items-center justify-center text-center',
+    left:   'items-start justify-center text-left pl-[10%] pr-[15%]'
+  }[layout] || 'items-center justify-center text-center';
 
-/**
- * @param {Object} props
- * @param {Object}   props.settings   - Slide appearance settings
- * @param {string}   props.appMode    - 'bible' | 'lyrics'
- * @param {Array}    props.slides     - Array of bible slides
- * @param {string|number} props.activeSlideId - ID of the focused slide
- * @param {Function} props.onSetActiveSlide - Callback to jump to a slide
- * @param {Object}   props.fontScale  - { fontSize, overflow, sizeLabel }
- * @param {string[]} props.lyricsSlides - Array of lyric lines
- * @param {Function} props.onSettingsChange - Callback to update global settings
- */
+  return (
+    <div
+      className="group relative shadow-2xl shadow-black/80 rounded-sm overflow-hidden ring-1 ring-white/10 w-full transition-transform duration-500 hover:scale-[1.01] shrink-0 optimize-gpu"
+      style={{ 
+        aspectRatio: '16 / 9', 
+        maxWidth: '1000px',
+        contentVisibility: 'auto',
+        containIntrinsicSize: '562px' // Approximate height for 1000px width 16:9
+      }}
+    >
+      <div className="absolute inset-0 transition-colors duration-300" style={backgroundStyle} />
+      {settings.bgImageUrl?.trim() && <div className="absolute inset-0 bg-black/40" />}
+      <div className={`absolute inset-0 flex flex-col p-[8%] ${layoutClasses}`}>
+        <div className="w-[85%] mx-auto">
+          <p
+            className="transition-all duration-300 font-bold whitespace-pre-wrap tracking-tight"
+            style={{
+              fontFamily: isLyric ? "'Montserrat', 'Inter', sans-serif" : settings.fontFamily,
+              fontSize: `${isTitle ? lyricFontSizePx * 1.5 : (isLyric ? lyricFontSizePx : mainFontPx)}px`,
+              color: settings.fontColor,
+              lineHeight: isTitle ? 1.2 : 1.4,
+              textShadow: '0 4px 12px rgba(0,0,0,0.7)',
+            }}
+          >
+            {text}
+          </p>
+          {refText && (
+            <p
+              className={`transition-all duration-300 ${isTitle ? 'mt-8 text-xl opacity-80' : 'mt-8'}`}
+              style={{
+                fontFamily: settings.fontFamily,
+                fontSize: `${isTitle ? refFontPx * 1.5 : refFontPx}px`,
+                color: settings.fontColor,
+                fontStyle: 'italic',
+                opacity: 0.8,
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+              }}
+            >
+              {isTitle ? `— ${refText} —` : `— ${refText}`}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="absolute bottom-4 right-6 text-white/15 text-[10px] font-mono select-none pointer-events-none tracking-widest">
+        {isLyric ? 'SONG' : 'KJV'}
+      </div>
+      
+      {/* Layout Position Toggles */}
+      <div className="absolute top-4 right-4 flex gap-1.5 overflow-hidden rounded-lg bg-black/40 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 p-1">
+        {[
+          { id: 'center', title: 'Centered', path: <path d="M4 8h16M4 12h16M4 16h16" /> },
+          { id: 'left', title: 'Left Aligned', path: <path d="M4 5v14M9 8l-4 4 4 4M5 12h13" /> }
+        ].map(opt => (
+          <button 
+            key={opt.id}
+            onClick={(e) => { e.stopPropagation(); onSettingsChange('layout', opt.id); }}
+            className={`p-1.5 rounded-md transition-all ${settings.layout === opt.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+            title={opt.title}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              {opt.path}
+            </svg>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+SlideCard.displayName = 'SlideCard';
+
 export default function SlidePreview({ 
   settings, 
   appMode, 
@@ -59,83 +141,6 @@ export default function SlidePreview({
     return { backgroundColor: settings.bgColor };
   }, [settings.bgColor, settings.bgImageUrl]);
 
-  // Components for the individual slide core logic
-  const SlideCard = ({ text, refText, isLyric = false, type = 'lyrics' }) => {
-    const isTitle = type === 'title';
-    const lyricFontSizePt = isLyric ? (settings.baseFontSize || getLyricsFontSize(text)) : (settings.baseFontSize || fontScale?.fontSize || 42);
-    const lyricFontSizePx = ptToCssPreviewPx(lyricFontSizePt, 800);
-    const layout = settings.layout || 'center';
-    
-    // Title slides always center
-    const layoutClasses = isTitle ? 'items-center justify-center text-center' : {
-      center: 'items-center justify-center text-center',
-      left:   'items-start justify-center text-left pl-[10%] pr-[15%]'
-    }[layout] || 'items-center justify-center text-center';
-
-    return (
-      <div
-        className="group relative shadow-2xl shadow-black/80 rounded-sm overflow-hidden ring-1 ring-white/10 w-full transition-transform duration-500 hover:scale-[1.01] shrink-0"
-        style={{ aspectRatio: '16 / 9', maxWidth: '1000px' }}
-      >
-        <div className="absolute inset-0 transition-colors duration-300" style={backgroundStyle} />
-        {settings.bgImageUrl?.trim() && <div className="absolute inset-0 bg-black/40" />}
-        <div className={`absolute inset-0 flex flex-col p-[8%] ${layoutClasses}`}>
-          <div className="w-[85%] mx-auto">
-            <p
-              className="transition-all duration-300 font-bold whitespace-pre-wrap tracking-tight"
-              style={{
-                fontFamily: isLyric ? "'Montserrat', 'Inter', sans-serif" : settings.fontFamily,
-                fontSize: `${isTitle ? lyricFontSizePx * 1.5 : (isLyric ? lyricFontSizePx : mainFontPx)}px`,
-                color: settings.fontColor,
-                lineHeight: isTitle ? 1.2 : 1.4,
-                textShadow: '0 4px 12px rgba(0,0,0,0.7)',
-              }}
-            >
-              {text}
-            </p>
-            {refText && (
-              <p
-                className={`transition-all duration-300 ${isTitle ? 'mt-8 text-xl opacity-80' : 'mt-8'}`}
-                style={{
-                  fontFamily: settings.fontFamily,
-                  fontSize: `${isTitle ? refFontPx * 1.5 : refFontPx}px`,
-                  color: settings.fontColor,
-                  fontStyle: 'italic',
-                  opacity: 0.8,
-                  textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                }}
-              >
-                {isTitle ? `— ${refText} —` : `— ${refText}`}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="absolute bottom-4 right-6 text-white/15 text-[10px] font-mono select-none pointer-events-none tracking-widest">
-          {isLyric ? 'SONG' : 'KJV'}
-        </div>
-        
-        {/* Layout Position Toggles */}
-        <div className="absolute top-4 right-4 flex gap-1.5 overflow-hidden rounded-lg bg-black/40 backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 p-1">
-          {[
-            { id: 'center', title: 'Centered', path: <path d="M4 8h16M4 12h16M4 16h16" /> },
-            { id: 'left', title: 'Left Aligned', path: <path d="M4 5v14M9 8l-4 4 4 4M5 12h13" /> }
-          ].map(opt => (
-            <button 
-              key={opt.id}
-              onClick={(e) => { e.stopPropagation(); onSettingsChange('layout', opt.id); }}
-              className={`p-1.5 rounded-md transition-all ${settings.layout === opt.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
-              title={opt.title}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                {opt.path}
-              </svg>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   // Sync scroll position with activeSlideId from parent
   useEffect(() => {
     if (appMode === 'bible' && activeSlideId && slideRefs.current[activeSlideId] && !isScrollingRef.current) {
@@ -146,7 +151,6 @@ export default function SlidePreview({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't navigate if the user is typing in an input or textarea
       if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
 
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
@@ -158,9 +162,6 @@ export default function SlidePreview({
         } else if (appMode === 'lyrics' && lyricsSlides.length > 1) {
           const nextIdx = Math.min(currentSlideIndex + 1, lyricsSlides.length - 1);
           if (nextIdx !== currentSlideIndex) {
-            const nextSlideId = `lyrics-${nextIdx}`;
-            // For lyrics, we rely on scroll position mostly, but we can search for a ref
-            // Actually, lyrics don't have IDs. I'll just scroll to the next slide element.
             const container = containerRef.current;
             if (container) {
               const slideHeight = container.scrollHeight / lyricsSlides.length;
@@ -237,8 +238,7 @@ export default function SlidePreview({
     setShowScrollHint(totalSlides > 1);
   }, [appMode, slides, lyricsSlides.length]);
 
-  const bibleSlidesToRender = useMemo(() => slides, [slides]);
-  const hasBibleContent = bibleSlidesToRender.length > 0;
+  const hasBibleContent = slides.length > 0;
   const hasLyrics = lyricsSlides.length > 0;
 
   return (
@@ -258,9 +258,19 @@ export default function SlidePreview({
         <div className="w-full flex flex-col items-center gap-[20vh]">
           {appMode === 'bible' ? (
             hasBibleContent ? (
-              bibleSlidesToRender.map((s) => (
+              slides.map((s) => (
                 <div key={s.id} ref={el => slideRefs.current[s.id] = el} className="w-full flex justify-center snap-center">
-                  <SlideCard text={s.verseState.verseText || ""} refText={s.verseState.verseRef} type={s.type || 'bible'} />
+                  <SlideCard 
+                    text={s.verseState.verseText || ""} 
+                    refText={s.verseState.verseRef} 
+                    type={s.type || 'bible'} 
+                    settings={settings}
+                    mainFontPx={mainFontPx}
+                    refFontPx={refFontPx}
+                    fontScale={fontScale}
+                    onSettingsChange={onSettingsChange}
+                    backgroundStyle={backgroundStyle}
+                  />
                 </div>
               ))
             ) : (
@@ -275,7 +285,18 @@ export default function SlidePreview({
             hasLyrics ? (
               lyricsSlides.map((s, idx) => (
                 <div key={`${idx}-${s.text}`} className="w-full flex justify-center snap-center">
-                  <SlideCard text={s.text} refText={s.refText} isLyric={true} type={s.type} />
+                  <SlideCard 
+                    text={s.text} 
+                    refText={s.refText} 
+                    isLyric={true} 
+                    type={s.type} 
+                    settings={settings}
+                    mainFontPx={mainFontPx}
+                    refFontPx={refFontPx}
+                    fontScale={fontScale}
+                    onSettingsChange={onSettingsChange}
+                    backgroundStyle={backgroundStyle}
+                  />
                 </div>
               ))
             ) : (
@@ -290,13 +311,13 @@ export default function SlidePreview({
         </div>
 
         {/* Floating Page Indicator */}
-        {((appMode === 'lyrics' && lyricsSlides.length > 1) || (appMode === 'bible' && hasBibleContent && bibleSlidesToRender.length > 1)) && (
+        {((appMode === 'lyrics' && lyricsSlides.length > 1) || (appMode === 'bible' && hasBibleContent && slides.length > 1)) && (
           <div className="fixed bottom-24 right-10 bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-full px-4 py-2 flex items-center gap-2 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
              <span className="text-[10px] font-bold text-indigo-400">SLIDE</span>
              <span className="text-[14px] font-black text-white">
-               {currentSlideIndex + 1}
-               <span className="text-slate-500 font-medium px-1">/</span>
-               {appMode === 'lyrics' ? lyricsSlides.length : bibleSlidesToRender.length}
+                {currentSlideIndex + 1}
+                <span className="text-slate-500 font-medium px-1">/</span>
+                {appMode === 'lyrics' ? lyricsSlides.length : slides.length}
              </span>
           </div>
         )}
@@ -316,7 +337,7 @@ export default function SlidePreview({
           <div className="flex items-center gap-4 mt-12 py-2 px-4 bg-slate-900/50 rounded-full border border-slate-800/50 text-[10px] text-slate-500 font-mono">
             <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-indigo-500"/> Bible Mode</span>
             <span className="w-px h-3 bg-slate-800"/>
-            <span>{bibleSlidesToRender.length} slides</span>
+            <span>{slides.length} slides</span>
             <span className="w-px h-3 bg-slate-800"/>
             <span className="text-indigo-400 capitalize">{settings.layout}</span>
           </div>

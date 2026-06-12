@@ -108,14 +108,14 @@ export default function AdminPanel({
   lyricsRawText,
   onLyricsChange,
   lyricsSlides,
-  onReorderSave,
   onShowHelp,
   onPresent,
+  isDownloading,
+  setIsDownloading,
 }) {
   const verseState = activeSlide.verseState;
   const verseQuery = activeSlide.verseQuery;
 
-  const [isExporting, setIsExporting] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
@@ -164,15 +164,15 @@ export default function AdminPanel({
   // Export handler
   const handleExport = async () => {
     const canExport = appMode === 'bible' ? hasAnyVerse : (lyricsSlides && lyricsSlides.length > 0);
-    if (!canExport) return;
+    if (!canExport || isDownloading) return;
 
-    setIsExporting(true);
+    setIsDownloading(true);
     try {
       await generateAndDownloadPptx(slides, settings, appMode, lyricsSlides);
     } catch (err) {
       console.error('PPTX generation failed:', err);
     } finally {
-      setIsExporting(false);
+      setIsDownloading(false);
     }
   };
 
@@ -727,15 +727,15 @@ export default function AdminPanel({
 
           <button
             onClick={handleExport}
-            disabled={(appMode === 'bible' ? !hasAnyVerse : lyricsRawText.trim().length === 0) || isExporting}
+            disabled={(appMode === 'bible' ? !hasAnyVerse : lyricsRawText.trim().length === 0) || isDownloading}
             className={`flex-1 py-3.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg ${
-              ((appMode === 'bible' && hasAnyVerse) || (appMode === 'lyrics' && lyricsRawText.trim().length > 0)) && !isExporting
+              ((appMode === 'bible' && hasAnyVerse) || (appMode === 'lyrics' && lyricsRawText.trim().length > 0)) && !isDownloading
                 ? 'bg-slate-700 hover:bg-slate-600 text-white cursor-pointer active:scale-95'
                 : 'bg-slate-800 text-slate-600 cursor-not-allowed'
             }`}
             title="Download PowerPoint"
           >
-            {isExporting ? (
+            {isDownloading ? (
               <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
